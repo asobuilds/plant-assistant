@@ -1,0 +1,8 @@
+gradio
+transformers
+requests
+
+streamlit
+transformers
+requests
+Pillow
