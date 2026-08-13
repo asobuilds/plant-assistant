@@ -1,6 +1,5 @@
 import os
 # Set your Hugging Face token here (replace with your actual token)
-os.environ["HF_TOKEN"] = "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"
 
 import gradio as gr
 import requests
