@@ -1,5 +1,4 @@
 import os
-# Set your Hugging Face token here (replace with your actual token)
 
 import gradio as gr
 import requests
