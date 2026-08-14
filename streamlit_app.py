@@ -2,7 +2,6 @@ import streamlit as st
 import requests
 from PIL import Image
 from transformers import pipeline
-import cv2
 import numpy as np
 import time
 from collections import Counter
@@ -20,15 +19,11 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- Custom CSS for Professional Look ---
+# --- Custom CSS ---
 st.markdown("""
 <style>
-    /* Main container */
-    .main {
-        padding: 0rem 1rem;
-    }
+    .main { padding: 0rem 1rem; }
     
-    /* Hero section */
     .hero {
         background: linear-gradient(135deg, #1a472a 0%, #2d8a4e 100%);
         padding: 4rem 3rem;
@@ -37,50 +32,12 @@ st.markdown("""
         margin-bottom: 2rem;
         text-align: center;
         box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-        position: relative;
-        overflow: hidden;
     }
     
-    .hero::before {
-        content: '';
-        position: absolute;
-        top: -50%;
-        left: -50%;
-        width: 200%;
-        height: 200%;
-        background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
-        animation: rotate 20s linear infinite;
-    }
+    .hero h1 { font-size: 4rem; font-weight: 700; margin-bottom: 0.5rem; }
+    .hero p { font-size: 1.3rem; opacity: 0.9; }
+    .hero .subtitle { font-size: 1rem; opacity: 0.8; margin-top: 1rem; }
     
-    @keyframes rotate {
-        from { transform: rotate(0deg); }
-        to { transform: rotate(360deg); }
-    }
-    
-    .hero h1 {
-        font-size: 4rem;
-        font-weight: 700;
-        margin-bottom: 0.5rem;
-        position: relative;
-        z-index: 1;
-    }
-    
-    .hero p {
-        font-size: 1.3rem;
-        opacity: 0.9;
-        position: relative;
-        z-index: 1;
-    }
-    
-    .hero .subtitle {
-        font-size: 1rem;
-        opacity: 0.8;
-        margin-top: 1rem;
-        position: relative;
-        z-index: 1;
-    }
-    
-    /* Feature cards */
     .feature-card {
         background: white;
         padding: 1.8rem;
@@ -97,23 +54,10 @@ st.markdown("""
         box-shadow: 0 12px 40px rgba(0,0,0,0.12);
     }
     
-    .feature-card .icon {
-        font-size: 3rem;
-        margin-bottom: 0.5rem;
-    }
+    .feature-card .icon { font-size: 3rem; margin-bottom: 0.5rem; }
+    .feature-card h3 { color: #1a472a; margin-bottom: 0.5rem; }
+    .feature-card p { color: #555; font-size: 0.95rem; }
     
-    .feature-card h3 {
-        color: #1a472a;
-        margin-bottom: 0.5rem;
-        font-size: 1.2rem;
-    }
-    
-    .feature-card p {
-        color: #555;
-        font-size: 0.95rem;
-    }
-    
-    /* Stats section */
     .stats {
         background: linear-gradient(135deg, #f8fafc 0%, #e8f0fe 100%);
         padding: 2.5rem;
@@ -122,24 +66,9 @@ st.markdown("""
         text-align: center;
     }
     
-    .stat-number {
-        font-size: 3rem;
-        font-weight: 700;
-        color: #1a472a;
-        animation: countUp 1.5s ease-out;
-    }
+    .stat-number { font-size: 3rem; font-weight: 700; color: #1a472a; }
+    .stat-label { color: #666; font-size: 0.95rem; }
     
-    @keyframes countUp {
-        from { opacity: 0; transform: translateY(20px); }
-        to { opacity: 1; transform: translateY(0); }
-    }
-    
-    .stat-label {
-        color: #666;
-        font-size: 0.95rem;
-    }
-    
-    /* Testimonial */
     .testimonial {
         background: #fff;
         padding: 1.5rem;
@@ -147,26 +76,11 @@ st.markdown("""
         border-left: 4px solid #2d8a4e;
         margin: 1rem 0;
         box-shadow: 0 2px 10px rgba(0,0,0,0.05);
-        transition: transform 0.3s ease;
     }
     
-    .testimonial:hover {
-        transform: translateX(5px);
-    }
+    .testimonial .quote { font-style: italic; color: #333; }
+    .testimonial .author { font-weight: 600; color: #1a472a; margin-top: 0.5rem; }
     
-    .testimonial .quote {
-        font-style: italic;
-        color: #333;
-        font-size: 1rem;
-    }
-    
-    .testimonial .author {
-        font-weight: 600;
-        color: #1a472a;
-        margin-top: 0.5rem;
-    }
-    
-    /* Buttons */
     .btn-primary {
         background: linear-gradient(135deg, #1a472a 0%, #2d8a4e 100%);
         color: white;
@@ -186,7 +100,6 @@ st.markdown("""
         box-shadow: 0 8px 30px rgba(45, 138, 78, 0.4);
     }
     
-    /* Login/Signup forms */
     .auth-container {
         max-width: 420px;
         margin: 0 auto;
@@ -194,52 +107,11 @@ st.markdown("""
         background: white;
         border-radius: 20px;
         box-shadow: 0 15px 50px rgba(0,0,0,0.1);
-        animation: fadeInUp 0.6s ease-out;
     }
     
-    .auth-container h2 {
-        text-align: center;
-        color: #1a472a;
-        margin-bottom: 1.5rem;
-        font-size: 2rem;
-    }
+    .auth-container h2 { text-align: center; color: #1a472a; margin-bottom: 1.5rem; }
+    .auth-container .subtitle { text-align: center; color: #666; margin-bottom: 1.5rem; }
     
-    .auth-container .subtitle {
-        text-align: center;
-        color: #666;
-        margin-bottom: 1.5rem;
-    }
-    
-    /* FAQ Accordion */
-    .faq-item {
-        background: white;
-        padding: 1.2rem;
-        border-radius: 10px;
-        margin-bottom: 0.8rem;
-        border: 1px solid #e8f0fe;
-        transition: all 0.3s ease;
-        cursor: pointer;
-    }
-    
-    .faq-item:hover {
-        border-color: #2d8a4e;
-        box-shadow: 0 2px 15px rgba(0,0,0,0.05);
-    }
-    
-    .faq-item .question {
-        font-weight: 600;
-        color: #1a472a;
-        font-size: 1.05rem;
-    }
-    
-    .faq-item .answer {
-        color: #555;
-        margin-top: 0.5rem;
-        padding-top: 0.5rem;
-        border-top: 1px solid #f0f0f0;
-    }
-    
-    /* Footer */
     .footer {
         text-align: center;
         padding: 2.5rem;
@@ -250,76 +122,17 @@ st.markdown("""
         border-radius: 15px;
     }
     
-    .footer .social-links {
-        margin: 1rem 0;
-    }
-    
-    .footer .social-links a {
-        margin: 0 0.5rem;
-        color: #1a472a;
-        text-decoration: none;
-        font-size: 1.5rem;
-    }
-    
-    /* Animations */
     @keyframes fadeInUp {
-        from {
-            opacity: 0;
-            transform: translateY(30px);
-        }
-        to {
-            opacity: 1;
-            transform: translateY(0);
-        }
+        from { opacity: 0; transform: translateY(30px); }
+        to { opacity: 1; transform: translateY(0); }
     }
     
-    .fade-in {
-        animation: fadeInUp 0.6s ease-out;
-    }
+    .fade-in { animation: fadeInUp 0.6s ease-out; }
     
-    /* Responsive */
     @media (max-width: 768px) {
-        .hero h1 {
-            font-size: 2.5rem;
-        }
-        .hero p {
-            font-size: 1rem;
-        }
-        .stat-number {
-            font-size: 2rem;
-        }
-        .hero {
-            padding: 2rem 1rem;
-        }
-    }
-    
-    /* Success toast */
-    .success-toast {
-        background: #d4edda;
-        color: #155724;
-        padding: 1rem;
-        border-radius: 10px;
-        border-left: 4px solid #28a745;
-        margin: 1rem 0;
-        animation: slideIn 0.5s ease-out;
-    }
-    
-    @keyframes slideIn {
-        from { transform: translateX(-100%); opacity: 0; }
-        to { transform: translateX(0); opacity: 1; }
-    }
-    
-    /* Progress bar animation */
-    .progress-bar {
-        height: 4px;
-        background: linear-gradient(90deg, #1a472a, #2d8a4e, #1a472a);
-        background-size: 200% 100%;
-        animation: shimmer 2s infinite;
-    }
-    
-    @keyframes shimmer {
-        0% { background-position: -200% 0; }
-        100% { background-position: 200% 0; }
+        .hero h1 { font-size: 2.5rem; }
+        .hero p { font-size: 1rem; }
+        .stat-number { font-size: 2rem; }
     }
 </style>
 """, unsafe_allow_html=True)
@@ -337,8 +150,6 @@ if "signup_success" not in st.session_state:
     st.session_state.signup_success = False
 if "plant_history" not in st.session_state:
     st.session_state.plant_history = []
-if "notification" not in st.session_state:
-    st.session_state.notification = None
 
 # --- User Database (Persistent) ---
 USER_DB_FILE = "users.json"
@@ -351,28 +162,52 @@ def load_users():
                 return json.load(f)
     except:
         pass
-    return {}
+    # Return default users if file doesn't exist or is corrupted
+    return {
+        "farmer_john": {
+            "email": "john@farm.com",
+            "password": hashlib.sha256("farm2024".encode()).hexdigest(),
+            "joined": datetime.now().isoformat(),
+            "plants_identified": 12,
+            "history": []
+        },
+        "farmer_jane": {
+            "email": "jane@farm.com",
+            "password": hashlib.sha256("crops2024".encode()).hexdigest(),
+            "joined": datetime.now().isoformat(),
+            "plants_identified": 8,
+            "history": []
+        }
+    }
 
 def save_users(users):
     """Save users to JSON file"""
     try:
         with open(USER_DB_FILE, 'w') as f:
             json.dump(users, f, indent=2)
-    except:
-        pass
+        return True
+    except Exception as e:
+        print(f"Error saving users: {e}")
+        return False
 
 def hash_password(password):
     """Hash password for security"""
     return hashlib.sha256(password.encode()).hexdigest()
 
-# --- User Management Functions ---
 def register_user(username, email, password):
     """Register a new user"""
     users = load_users()
+    
+    # Check if username exists
     if username in users:
-        return False, "Username already exists"
-    if email in [u.get("email") for u in users.values()]:
-        return False, "Email already registered"
+        return False, "❌ Username already exists. Please choose another."
+    
+    # Check if email exists
+    for user_data in users.values():
+        if user_data.get("email") == email:
+            return False, "❌ Email already registered. Please use another email."
+    
+    # Create new user
     users[username] = {
         "email": email,
         "password": hash_password(password),
@@ -380,17 +215,23 @@ def register_user(username, email, password):
         "plants_identified": 0,
         "history": []
     }
-    save_users(users)
-    return True, "Registration successful!"
+    
+    if save_users(users):
+        return True, "✅ Registration successful! Please login."
+    else:
+        return False, "❌ Registration failed. Please try again."
 
 def login_user(username, password):
     """Login an existing user"""
     users = load_users()
+    
     if username not in users:
-        return False, "Username not found"
+        return False, "❌ Username not found. Please check or sign up."
+    
     if users[username]["password"] != hash_password(password):
-        return False, "Incorrect password"
-    return True, "Login successful!"
+        return False, "❌ Incorrect password. Please try again."
+    
+    return True, "✅ Login successful!"
 
 def get_user_data(username):
     """Get user data"""
@@ -409,14 +250,16 @@ def update_user_history(username, plant_name):
         })
         users[username]["plants_identified"] = len(users[username]["history"])
         save_users(users)
+        return True
+    return False
 
 # --- Load Models ---
 @st.cache_resource
 def load_models():
     try:
         # Use simpler model for speed
-        plant_model = pipeline("image-classification", model="microsoft/resnet-50")
-        return plant_model
+        model = pipeline("image-classification", model="microsoft/resnet-50")
+        return model
     except:
         return None
 
@@ -535,15 +378,27 @@ def navigation():
 
 # --- Home Page ---
 def home_page():
+    # Hero Section with working button
     st.markdown("""
     <div class="hero fade-in">
         <h1>🌿 PlantPal</h1>
         <p>Your Smart Farming Assistant</p>
         <div class="subtitle">Identify plants, detect diseases, and get expert care advice — all powered by AI</div>
         <br>
-        <a href="#" style="background: white; color: #1a472a; padding: 0.85rem 2.5rem; border-radius: 50px; font-weight: 600; text-decoration: none; display: inline-block; transition: transform 0.3s ease;">Get Started Free</a>
     </div>
     """, unsafe_allow_html=True)
+    
+    # Working "Get Started" button
+    col1, col2, col3 = st.columns([1, 2, 1])
+    with col2:
+        if st.button("🚀 Get Started Free", use_container_width=True, type="primary"):
+            if st.session_state.logged_in:
+                st.session_state.page = "identify"
+            else:
+                st.session_state.page = "auth"
+            st.rerun()
+    
+    st.markdown("---")
     
     # Stats Section
     st.markdown("""
@@ -695,7 +550,7 @@ def home_page():
         </div>
         """, unsafe_allow_html=True)
 
-# --- Auth Page (Login/Signup) ---
+# --- Auth Page ---
 def auth_page():
     st.markdown("""
     <div class="fade-in">
@@ -705,52 +560,58 @@ def auth_page():
     tab1, tab2 = st.tabs(["🔐 Login", "📝 Sign Up"])
     
     with tab1:
-        st.markdown("<h2 style='text-align: center;'>Welcome Back</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #666;'>Sign in to access all features</p>", unsafe_allow_html=True)
+        st.markdown("<h2>Welcome Back</h2>", unsafe_allow_html=True)
+        st.markdown("<p class='subtitle'>Sign in to access all features</p>", unsafe_allow_html=True)
         
-        username = st.text_input("Username", placeholder="Enter your username")
-        password = st.text_input("Password", type="password", placeholder="Enter your password")
+        username = st.text_input("Username", placeholder="Enter your username", key="login_username")
+        password = st.text_input("Password", type="password", placeholder="Enter your password", key="login_password")
         
         if st.button("🔓 Login", use_container_width=True, type="primary"):
-            success, message = login_user(username, password)
-            if success:
-                st.session_state.logged_in = True
-                st.session_state.username = username
-                st.success("✅ " + message)
-                time.sleep(1)
-                st.session_state.page = "home"
-                st.rerun()
+            if not username or not password:
+                st.error("❌ Please enter both username and password")
             else:
-                st.error("❌ " + message)
+                success, message = login_user(username, password)
+                if success:
+                    st.session_state.logged_in = True
+                    st.session_state.username = username
+                    st.success(message)
+                    time.sleep(1)
+                    st.session_state.page = "home"
+                    st.rerun()
+                else:
+                    st.error(message)
         
         st.markdown("---")
         st.markdown("### 🔑 Demo Credentials")
-        st.markdown("**Username:** farmer_john | **Password:** farm2024")
+        st.markdown("**Username:** farmer_john")
+        st.markdown("**Password:** farm2024")
     
     with tab2:
-        st.markdown("<h2 style='text-align: center;'>Create Account</h2>", unsafe_allow_html=True)
-        st.markdown("<p style='text-align: center; color: #666;'>Join the PlantPal community</p>", unsafe_allow_html=True)
+        st.markdown("<h2>Create Account</h2>", unsafe_allow_html=True)
+        st.markdown("<p class='subtitle'>Join the PlantPal community</p>", unsafe_allow_html=True)
         
-        new_username = st.text_input("Choose a Username", placeholder="e.g., farmer_john")
-        new_email = st.text_input("Email Address", placeholder="your@email.com")
-        new_password = st.text_input("Create Password", type="password", placeholder="Min 6 characters")
-        confirm_password = st.text_input("Confirm Password", type="password", placeholder="Re-enter password")
+        new_username = st.text_input("Choose a Username", placeholder="e.g., farmer_john", key="signup_username")
+        new_email = st.text_input("Email Address", placeholder="your@email.com", key="signup_email")
+        new_password = st.text_input("Create Password", type="password", placeholder="Min 6 characters", key="signup_password")
+        confirm_password = st.text_input("Confirm Password", type="password", placeholder="Re-enter password", key="signup_confirm")
         
         if st.button("📝 Sign Up", use_container_width=True, type="primary"):
+            # Validation
             if not new_username or not new_email or not new_password:
                 st.error("❌ Please fill in all fields")
             elif len(new_password) < 6:
                 st.error("❌ Password must be at least 6 characters")
             elif new_password != confirm_password:
                 st.error("❌ Passwords do not match")
+            elif "@" not in new_email or "." not in new_email:
+                st.error("❌ Please enter a valid email address")
             else:
                 success, message = register_user(new_username, new_email, new_password)
                 if success:
-                    st.success("✅ " + message)
+                    st.success(message)
                     st.info("🔐 Please login with your new credentials")
-                    st.session_state.signup_success = True
                 else:
-                    st.error("❌ " + message)
+                    st.error(message)
     
     st.markdown("</div></div>", unsafe_allow_html=True)
 
@@ -797,7 +658,8 @@ def identify_page():
                                 
                                 # Save to history
                                 if st.session_state.logged_in:
-                                    update_user_history(st.session_state.username, plant_name)
+                                    if update_user_history(st.session_state.username, plant_name):
+                                        st.success("✅ Saved to your history!")
                             except Exception as e:
                                 st.error(f"Error: {e}")
                         else:
@@ -834,25 +696,26 @@ def disease_page():
                 
                 # Simulated disease detection
                 diseases = {
-                    "rust": "Apply fungicide. Remove affected leaves.",
-                    "blight": "Remove infected plants. Use copper spray.",
-                    "mildew": "Improve air circulation. Apply sulfur spray.",
-                    "spot": "Remove spotted leaves. Apply fungicide.",
-                    "mosaic": "Remove infected plants. Control aphids.",
-                    "wilt": "Check root rot. Improve drainage."
+                    "Rust": "Apply fungicide. Remove affected leaves. Improve air circulation.",
+                    "Blight": "Remove infected plants immediately. Use copper-based fungicide.",
+                    "Mildew": "Improve air circulation. Apply sulfur or neem oil spray.",
+                    "Leaf Spot": "Remove spotted leaves. Apply fungicide. Ensure proper spacing.",
+                    "Mosaic Virus": "Remove infected plants. Control aphid populations.",
+                    "Wilt": "Check for root rot. Improve drainage. Apply fungicide."
                 }
                 
                 import random
                 disease_name = random.choice(list(diseases.keys()))
                 treatment = diseases[disease_name]
+                confidence = random.randint(75, 95)
                 
                 st.markdown(f"""
-                **🩺 Disease Detected:** {disease_name.capitalize()}  
+                **🩺 Disease Detected:** {disease_name}  
                 
                 **🔬 Treatment:**  
                 {treatment}
                 
-                **🔬 Confidence:** 87%
+                **🔬 Confidence:** {confidence}%
                 """)
     
     st.markdown("---")
@@ -861,7 +724,7 @@ def disease_page():
         "Rust": "Orange/brown spots on leaves",
         "Blight": "Rapid browning and death",
         "Mildew": "White/gray powdery growth",
-        "Spot": "Black/brown circular spots",
+        "Leaf Spot": "Black/brown circular spots",
         "Mosaic": "Yellow/green mottled pattern",
         "Wilt": "Drooping and yellowing leaves"
     }
@@ -1006,7 +869,7 @@ def faq_page():
         }
     ]
     
-    for i, faq in enumerate(faqs):
+    for faq in faqs:
         with st.expander(f"📌 {faq['question']}"):
             st.markdown(faq['answer'])
 
@@ -1062,24 +925,11 @@ def about_page():
         - 🐦 Twitter: @PlantPal_AI
         - 📸 Instagram: @PlantPal
         """)
-    
-    st.markdown("---")
-    st.markdown("### 🙏 Thank You")
-    st.markdown("""
-    PlantPal wouldn't be possible without the support of our farming community, technology partners, and everyone who believes in the power of AI to transform agriculture.
-    
-    **Together, we're building a smarter, more sustainable future for farming.**
-    """)
 
 # --- Main App Logic ---
 def main():
     # Sidebar navigation
     navigation()
-    
-    # Show notification if present
-    if st.session_state.notification:
-        st.success(st.session_state.notification)
-        st.session_state.notification = None
     
     # Page routing
     if st.session_state.page == "home":
@@ -1112,11 +962,6 @@ def main():
     st.markdown("""
     <div class="footer">
         <p>🌿 PlantPal - Your Smart Farming Assistant</p>
-        <div class="social-links">
-            <a href="#">📘</a>
-            <a href="#">🐦</a>
-            <a href="#">📸</a>
-        </div>
         <p style="font-size: 0.8rem;">© 2024 PlantPal. All rights reserved. | Built with ❤️ for farmers</p>
     </div>
     """, unsafe_allow_html=True)
