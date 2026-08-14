@@ -8,7 +8,9 @@ import os
 import hashlib
 from datetime import datetime
 
-# --- Page Configuration ---
+# ============================================
+# PAGE CONFIG
+# ============================================
 st.set_page_config(
     page_title="🌿 PlantPal - Smart Farming Assistant",
     page_icon="🌿",
@@ -16,7 +18,9 @@ st.set_page_config(
     initial_sidebar_state="expanded"
 )
 
-# --- Initialize Session State ---
+# ============================================
+# SESSION STATE
+# ============================================
 if "logged_in" not in st.session_state:
     st.session_state.logged_in = False
 if "username" not in st.session_state:
@@ -26,130 +30,161 @@ if "user_email" not in st.session_state:
 if "page" not in st.session_state:
     st.session_state.page = "home"
 if "theme" not in st.session_state:
-    st.session_state.theme = "light"  # or "dark"
+    st.session_state.theme = "light"  # light / dark
 if "brightness" not in st.session_state:
     st.session_state.brightness = 100  # percentage
 if "bg_index" not in st.session_state:
     st.session_state.bg_index = 0
 
-# --- Custom CSS with Theme, Brightness, and Background ---
+# ============================================
+# CUSTOM CSS – MODERN, RESPONSIVE, WITH PLANT EMOJIS
+# ============================================
 def get_css():
-    # Background images (rotating)
-    bg_images = [
-        "https://images.unsplash.com/photo-1500382017468-9049fed747ef?w=1920",
-        "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=1920",
-        "https://images.unsplash.com/photo-1501004318641-b39e6451bec6?w=1920",
-        "https://images.unsplash.com/photo-1466692476868-aef1dfb1e4a7?w=1920",
-        "https://images.unsplash.com/photo-1585320806297-9794b3e4eeae?w=1920"
-    ]
-    # Use first image as default, we'll animate using CSS
-    bg_url = bg_images[0]
-    
     # Theme colors
     if st.session_state.theme == "dark":
-        bg_color = "#1e1e2e"
+        bg_color = "#1a1a2e"
         text_color = "#e0e0e0"
-        card_bg = "#2d2d44"
+        card_bg = "rgba(40,40,60,0.85)"
         border_color = "#444466"
+        shadow = "0 8px 32px rgba(0,0,0,0.4)"
     else:
-        bg_color = "#f5f7fa"
+        bg_color = "#f0f4f0"
         text_color = "#1a1a2e"
-        card_bg = "#ffffff"
-        border_color = "#d0d7de"
-    
+        card_bg = "rgba(255,255,255,0.85)"
+        border_color = "#c8d6c8"
+        shadow = "0 8px 32px rgba(0,0,0,0.1)"
+
     brightness = st.session_state.brightness / 100.0
-    
+
     return f"""
     <style>
-        /* Global */
+        /* Main background with gradient and plant emojis */
         .stApp {{
-            background-color: {bg_color};
+            background: {bg_color};
             color: {text_color};
-            transition: background-color 0.3s, color 0.3s;
+            transition: background 0.3s, color 0.3s;
         }}
-        /* Main content with background image */
-        .main {{
-            background-image: url('{bg_url}');
-            background-size: cover;
-            background-position: center;
-            background-attachment: fixed;
-            filter: brightness({brightness});
-            transition: filter 0.3s;
-            min-height: 100vh;
-            padding: 1rem;
-        }}
-        /* Overlay for readability */
-        .main-overlay {{
-            background: rgba(255,255,255,0.85);
-            backdrop-filter: blur(5px);
-            border-radius: 20px;
-            padding: 2rem;
-            margin: 1rem;
-        }}
-        .dark .main-overlay {{
-            background: rgba(20,20,40,0.85);
-        }}
-        /* Cards */
-        .feature-card {{
-            background: {card_bg};
-            border: 1px solid {border_color};
-            border-radius: 15px;
-            padding: 1.5rem;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.06);
-            transition: transform 0.3s, box-shadow 0.3s;
+        /* Plant emoji background – fixed, low opacity */
+        .plant-bg {{
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
             height: 100%;
+            z-index: 0;
+            opacity: 0.12;
+            pointer-events: none;
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            font-size: 4rem;
+            overflow: hidden;
+            filter: brightness({brightness});
         }}
-        .feature-card:hover {{
-            transform: translateY(-5px);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        .plant-bg span {{
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }}
+        /* Main content overlay */
+        .main-content {{
+            position: relative;
+            z-index: 1;
+            background: {card_bg};
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 24px;
+            padding: 2rem;
+            margin: 1rem 0.5rem;
+            border: 1px solid {border_color};
+            box-shadow: {shadow};
+            transition: background 0.3s, border 0.3s;
         }}
         /* Hero */
         .hero {{
-            background: linear-gradient(135deg, rgba(26,71,42,0.9), rgba(45,138,78,0.9));
-            padding: 3rem 2rem;
+            background: linear-gradient(135deg, #1a472a, #2d8a4e, #1a472a);
+            background-size: 200% 200%;
+            animation: gradientShift 8s ease infinite;
+            padding: 2.5rem 2rem;
             border-radius: 20px;
             color: white;
             text-align: center;
             margin-bottom: 2rem;
             box-shadow: 0 10px 40px rgba(0,0,0,0.2);
         }}
-        .hero h1 {{ font-size: 3.5rem; font-weight: 700; }}
+        @keyframes gradientShift {{
+            0% {{ background-position: 0% 50%; }}
+            50% {{ background-position: 100% 50%; }}
+            100% {{ background-position: 0% 50%; }}
+        }}
+        .hero h1 {{ font-size: 3.5rem; font-weight: 700; margin-bottom: 0.3rem; }}
         .hero p {{ font-size: 1.2rem; opacity: 0.9; }}
-        /* Buttons */
-        .btn-primary {{
-            background: linear-gradient(135deg, #1a472a, #2d8a4e);
-            color: white !important;
-            padding: 0.7rem 2rem;
-            border-radius: 50px;
-            font-weight: 600;
-            border: none;
-            transition: transform 0.3s;
-            display: inline-block;
-            text-decoration: none;
+
+        /* Feature cards – glass morphism */
+        .feature-card {{
+            background: {card_bg};
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid {border_color};
+            border-radius: 20px;
+            padding: 1.8rem 1.2rem;
+            text-align: center;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+            height: 100%;
         }}
-        .btn-primary:hover {{
-            transform: scale(1.05);
-            box-shadow: 0 8px 30px rgba(45,138,78,0.4);
+        .feature-card:hover {{
+            transform: translateY(-6px);
+            box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+            border-color: #2d8a4e;
         }}
+        .feature-card .icon {{ font-size: 3rem; margin-bottom: 0.5rem; }}
+        .feature-card h3 {{ color: #1a472a; margin-bottom: 0.3rem; }}
+        .feature-card p {{ color: #555; font-size: 0.95rem; }}
+
         /* Auth container */
         .auth-container {{
-            max-width: 420px;
+            max-width: 440px;
             margin: 0 auto;
             background: {card_bg};
-            padding: 2.5rem;
-            border-radius: 20px;
-            box-shadow: 0 15px 50px rgba(0,0,0,0.1);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid {border_color};
+            border-radius: 24px;
+            padding: 2.5rem;
+            box-shadow: {shadow};
         }}
+
+        /* Stats boxes */
+        .stat-box {{
+            background: {card_bg};
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border: 1px solid {border_color};
+            border-radius: 16px;
+            padding: 1.5rem;
+            text-align: center;
+            transition: all 0.2s;
+        }}
+        .stat-box:hover {{ border-color: #2d8a4e; }}
+        .stat-number {{
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: #2d8a4e;
+        }}
+
         /* Testimonial */
         .testimonial {{
             background: {card_bg};
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             border-left: 4px solid #2d8a4e;
-            padding: 1.2rem 1.5rem;
-            border-radius: 10px;
+            border-radius: 12px;
+            padding: 1.2rem 1.8rem;
             margin: 1rem 0;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+            border: 1px solid {border_color};
         }}
+
         /* Footer */
         .footer {{
             text-align: center;
@@ -157,60 +192,55 @@ def get_css():
             color: #888;
             border-top: 1px solid {border_color};
             margin-top: 3rem;
-        }}
-        /* Profile stats */
-        .stat-box {{
             background: {card_bg};
-            padding: 1.5rem;
-            border-radius: 12px;
-            text-align: center;
-            border: 1px solid {border_color};
-            margin: 0.5rem 0;
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            border-radius: 16px;
         }}
-        .stat-number {{
-            font-size: 2.5rem;
-            font-weight: 700;
-            color: #2d8a4e;
+
+        /* Buttons */
+        .stButton > button {{
+            background: linear-gradient(135deg, #1a472a, #2d8a4e) !important;
+            color: white !important;
+            font-weight: 600 !important;
+            border: none !important;
+            border-radius: 50px !important;
+            padding: 0.6rem 2rem !important;
+            transition: all 0.3s ease !important;
         }}
+        .stButton > button:hover {{
+            transform: scale(1.04) !important;
+            box-shadow: 0 8px 30px rgba(45,138,78,0.4) !important;
+        }}
+
+        /* Sidebar */
+        .css-1d391kg, .css-1aumxhk {{
+            background: {card_bg} !important;
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border-right: 1px solid {border_color};
+        }}
+
+        /* Responsive */
+        @media (max-width: 768px) {{
+            .hero h1 {{ font-size: 2rem; }}
+            .hero p {{ font-size: 1rem; }}
+            .plant-bg {{ font-size: 2.5rem; grid-template-columns: repeat(6, 1fr); }}
+            .main-content {{ padding: 1rem; }}
+        }}
+
         /* Animations */
         @keyframes fadeInUp {{
             from {{ opacity: 0; transform: translateY(30px); }}
             to {{ opacity: 1; transform: translateY(0); }}
         }}
-        .fade-in {{
-            animation: fadeInUp 0.6s ease-out;
-        }}
-        /* Responsive */
-        @media (max-width: 768px) {{
-            .hero h1 {{ font-size: 2.2rem; }}
-            .hero p {{ font-size: 1rem; }}
-            .stat-number {{ font-size: 1.8rem; }}
-        }}
-        /* Background slideshow (using pseudo-element) */
-        .bg-slideshow {{
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            z-index: -1;
-            background-image: url('{bg_images[0]}');
-            background-size: cover;
-            background-position: center;
-            animation: bgSlideshow 30s infinite;
-        }}
-        @keyframes bgSlideshow {{
-            0% {{ background-image: url('{bg_images[0]}'); }}
-            20% {{ background-image: url('{bg_images[1]}'); }}
-            40% {{ background-image: url('{bg_images[2]}'); }}
-            60% {{ background-image: url('{bg_images[3]}'); }}
-            80% {{ background-image: url('{bg_images[4]}'); }}
-            100% {{ background-image: url('{bg_images[0]}'); }}
-        }}
+        .fade-in {{ animation: fadeInUp 0.6s ease-out; }}
     </style>
     """
 
-# --- User Database ---
+# ============================================
+# USER DATABASE (Persistent JSON)
+# ============================================
 USER_DB_FILE = "users.json"
 
 def load_users():
@@ -220,6 +250,7 @@ def load_users():
                 return json.load(f)
     except:
         pass
+    # Default demo user
     return {
         "farmer_john": {
             "email": "john@farm.com",
@@ -238,8 +269,8 @@ def save_users(users):
     except:
         return False
 
-def hash_password(password):
-    return hashlib.sha256(password.encode()).hexdigest()
+def hash_password(pw):
+    return hashlib.sha256(pw.encode()).hexdigest()
 
 def register_user(username, email, password):
     users = load_users()
@@ -284,10 +315,13 @@ def update_user_history(username, plant_name):
         return True
     return False
 
-# --- Load Models ---
+# ============================================
+# AI MODEL (Cached)
+# ============================================
 @st.cache_resource
 def load_models():
     try:
+        # Using ResNet-50 for speed – works well for general plants
         model = pipeline("image-classification", model="microsoft/resnet-50")
         return model
     except:
@@ -295,7 +329,9 @@ def load_models():
 
 plant_model = load_models()
 
-# --- Helper Functions ---
+# ============================================
+# HELPER FUNCTIONS
+# ============================================
 def get_weather(city):
     geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1&language=en&format=json"
     try:
@@ -345,21 +381,21 @@ def check_toxicity(plant_name):
             return value
     return "✅ SAFE: Not known to be toxic."
 
-# --- Navigation ---
+# ============================================
+# SIDEBAR NAVIGATION
+# ============================================
 def navigation():
     with st.sidebar:
         st.markdown("### 🌿 PlantPal")
         st.markdown("---")
-        
         if st.session_state.logged_in:
             st.markdown(f"### 👋 Hello, {st.session_state.username}!")
             user_data = get_user_data(st.session_state.username)
             if user_data:
                 st.markdown(f"📊 **Plants Identified:** {user_data.get('plants_identified', 0)}")
             st.markdown("---")
-        
-        # Navigation
-        nav = {
+        # Navigation buttons
+        nav_items = {
             "🏠 Home": "home",
             "👤 Profile": "profile" if st.session_state.logged_in else "auth",
             "🌱 Identify Plant": "identify",
@@ -369,28 +405,23 @@ def navigation():
             "❓ FAQ": "faq",
             "📖 About Us": "about"
         }
-        for label, page in nav.items():
+        for label, page in nav_items.items():
             if st.button(label, use_container_width=True):
                 st.session_state.page = page
                 st.rerun()
-        
         st.markdown("---")
-        
         # Settings
         with st.expander("⚙️ Settings"):
-            # Theme toggle
-            theme = st.selectbox("Theme", ["Light", "Dark"], index=0 if st.session_state.theme=="light" else 1)
+            theme = st.selectbox("Theme", ["Light", "Dark"],
+                                 index=0 if st.session_state.theme=="light" else 1)
             new_theme = "light" if theme=="Light" else "dark"
             if new_theme != st.session_state.theme:
                 st.session_state.theme = new_theme
                 st.rerun()
-            
-            # Brightness slider
             brightness = st.slider("Brightness", 50, 150, st.session_state.brightness, step=5)
             if brightness != st.session_state.brightness:
                 st.session_state.brightness = brightness
                 st.rerun()
-        
         if st.session_state.logged_in:
             if st.button("🚪 Logout", use_container_width=True):
                 st.session_state.logged_in = False
@@ -402,83 +433,106 @@ def navigation():
                 st.session_state.page = "auth"
                 st.rerun()
 
-# --- Pages ---
+# ============================================
+# PAGE FUNCTIONS
+# ============================================
 def home_page():
+    # Plant emoji background
     st.markdown("""
-    <div class="hero fade-in">
-        <h1>🌿 PlantPal</h1>
-        <p>Your Smart Farming Assistant</p>
-        <div style="font-size: 1rem; opacity:0.8; margin-top:0.5rem;">Identify plants, detect diseases, and get care advice — powered by AI</div>
-        <br>
+    <div class="plant-bg">
+        <span>🌿</span><span>🌱</span><span>🌳</span><span>🌾</span><span>🌺</span><span>🌻</span><span>🌴</span><span>🍃</span>
+        <span>🌿</span><span>🌱</span><span>🌳</span><span>🌾</span><span>🌺</span><span>🌻</span><span>🌴</span><span>🍃</span>
+        <span>🌿</span><span>🌱</span><span>🌳</span><span>🌾</span><span>🌺</span><span>🌻</span><span>🌴</span><span>🍃</span>
+        <span>🌿</span><span>🌱</span><span>🌳</span><span>🌾</span><span>🌺</span><span>🌻</span><span>🌴</span><span>🍃</span>
+        <span>🌿</span><span>🌱</span><span>🌳</span><span>🌾</span><span>🌺</span><span>🌻</span><span>🌴</span><span>🍃</span>
+        <span>🌿</span><span>🌱</span><span>🌳</span><span>🌾</span><span>🌺</span><span>🌻</span><span>🌴</span><span>🍃</span>
+        <span>🌿</span><span>🌱</span><span>🌳</span><span>🌾</span><span>🌺</span><span>🌻</span><span>🌴</span><span>🍃</span>
+        <span>🌿</span><span>🌱</span><span>🌳</span><span>🌾</span><span>🌺</span><span>🌻</span><span>🌴</span><span>🍃</span>
     </div>
     """, unsafe_allow_html=True)
-    
-    col1, col2, col3 = st.columns([1,2,1])
-    with col2:
-        if st.button("🚀 Get Started Free", use_container_width=True, type="primary"):
-            if st.session_state.logged_in:
-                st.session_state.page = "identify"
-            else:
-                st.session_state.page = "auth"
-            st.rerun()
-    
-    st.markdown("---")
-    
-    # Stats
-    st.markdown("""
-    <div style="background: linear-gradient(135deg, #f8fafc, #e8f0fe); padding: 2rem; border-radius: 15px; margin: 2rem 0;">
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1.5rem; text-align: center;">
-            <div><div class="stat-number">50K+</div><div style="color:#666;">Plants Identified</div></div>
-            <div><div class="stat-number">38</div><div style="color:#666;">Diseases Detected</div></div>
-            <div><div class="stat-number">100+</div><div style="color:#666;">Countries</div></div>
-            <div><div class="stat-number">92%</div><div style="color:#666;">Accuracy</div></div>
-        </div>
-    </div>
-    """, unsafe_allow_html=True)
-    
-    # Features
-    st.markdown("## 🌟 Features")
-    cols = st.columns(3)
-    features = [
-        ("🌱", "Identify Plants", "Instant plant name and care instructions"),
-        ("🩺", "Disease Detection", "Detect 38+ diseases with treatments"),
-        ("☀️", "Weather Advice", "Personalized tips based on your weather"),
-        ("☠️", "Safety Alerts", "Know if plants are toxic or safe"),
-        ("📹", "Video Analysis", "Identify from short videos"),
-        ("📚", "Learning Center", "Farmer-friendly guides")
-    ]
-    for i, (icon, title, desc) in enumerate(features):
-        with cols[i % 3]:
-            st.markdown(f"""
-            <div class="feature-card">
-                <div style="font-size: 2.5rem;">{icon}</div>
-                <h3>{title}</h3>
-                <p>{desc}</p>
+
+    # Main content with glass effect
+    with st.container():
+        st.markdown('<div class="main-content fade-in">', unsafe_allow_html=True)
+
+        st.markdown("""
+        <div class="hero">
+            <h1>🌿 PlantPal</h1>
+            <p>Your Smart Farming Assistant</p>
+            <div style="font-size: 1rem; opacity: 0.8; margin-top: 0.5rem;">
+                Identify plants, detect diseases, and get care advice — powered by AI
             </div>
-            """, unsafe_allow_html=True)
-    
-    # Testimonials
-    st.markdown("## 💬 What Farmers Say")
-    col1, col2 = st.columns(2)
-    with col1:
-        st.markdown("""
-        <div class="testimonial">
-            <div class="quote">"PlantPal saved my cassava crop! I detected disease early."</div>
-            <div class="author">— John M., Nigeria</div>
-        </div>
-        """, unsafe_allow_html=True)
-    with col2:
-        st.markdown("""
-        <div class="testimonial">
-            <div class="quote">"Simple and effective. I use it every day on my farm."</div>
-            <div class="author">— Mary K., Kenya</div>
+            <br>
         </div>
         """, unsafe_allow_html=True)
 
+        col1, col2, col3 = st.columns([1,2,1])
+        with col2:
+            if st.button("🚀 Get Started Free", use_container_width=True, type="primary"):
+                if st.session_state.logged_in:
+                    st.session_state.page = "identify"
+                else:
+                    st.session_state.page = "auth"
+                st.rerun()
+
+        st.markdown("---")
+
+        # Stats
+        st.markdown("""
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1.5rem; margin: 2rem 0;">
+            <div class="stat-box"><div class="stat-number">50K+</div><div>Plants Identified</div></div>
+            <div class="stat-box"><div class="stat-number">38</div><div>Diseases Detected</div></div>
+            <div class="stat-box"><div class="stat-number">100+</div><div>Countries</div></div>
+            <div class="stat-box"><div class="stat-number">92%</div><div>Accuracy</div></div>
+        </div>
+        """, unsafe_allow_html=True)
+
+        # Features
+        st.markdown("## 🌟 How PlantPal Helps You")
+        cols = st.columns(3)
+        features = [
+            ("🌱", "Identify Plants", "Instant name and care tips"),
+            ("🩺", "Disease Detection", "38+ diseases with treatments"),
+            ("☀️", "Weather Advice", "Personalized based on your location"),
+            ("☠️", "Safety Alerts", "Know if plants are toxic or safe"),
+            ("📹", "Video Analysis", "Identify from short videos"),
+            ("📚", "Learning Center", "Farmer-friendly guides")
+        ]
+        for i, (icon, title, desc) in enumerate(features):
+            with cols[i % 3]:
+                st.markdown(f"""
+                <div class="feature-card">
+                    <div class="icon">{icon}</div>
+                    <h3>{title}</h3>
+                    <p>{desc}</p>
+                </div>
+                """, unsafe_allow_html=True)
+
+        # Testimonials
+        st.markdown("## 💬 What Farmers Say")
+        col1, col2 = st.columns(2)
+        with col1:
+            st.markdown("""
+            <div class="testimonial">
+                <div class="quote">"PlantPal saved my cassava crop! I detected disease early."</div>
+                <div class="author">— John M., Nigeria</div>
+            </div>
+            """, unsafe_allow_html=True)
+        with col2:
+            st.markdown("""
+            <div class="testimonial">
+                <div class="quote">"Simple and effective. I use it every day on my farm."</div>
+                <div class="author">— Mary K., Kenya</div>
+            </div>
+            """, unsafe_allow_html=True)
+
+        st.markdown('</div>', unsafe_allow_html=True)  # end main-content
+
 def auth_page():
-    st.markdown("<div class='auth-container fade-in'>", unsafe_allow_html=True)
+    st.markdown('<div class="main-content fade-in">', unsafe_allow_html=True)
+    st.markdown('<div class="auth-container">', unsafe_allow_html=True)
     tab1, tab2 = st.tabs(["🔐 Login", "📝 Sign Up"])
-    
+
     with tab1:
         st.markdown("<h2 style='text-align:center;'>Welcome Back</h2>", unsafe_allow_html=True)
         username = st.text_input("Username", placeholder="Enter your username", key="login_user")
@@ -498,8 +552,8 @@ def auth_page():
             else:
                 st.error("Please fill in all fields")
         st.markdown("---")
-        st.markdown("**Demo:** farmer_john / farm2024")
-    
+        st.markdown("**🔑 Demo:** farmer_john / farm2024")
+
     with tab2:
         st.markdown("<h2 style='text-align:center;'>Create Account</h2>", unsafe_allow_html=True)
         new_user = st.text_input("Username", placeholder="Choose a username", key="signup_user")
@@ -529,15 +583,15 @@ def auth_page():
                     st.rerun()
                 else:
                     st.error(msg)
-    st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown('</div></div>', unsafe_allow_html=True)
 
 def profile_page():
-    st.markdown("## 👤 Your Profile")
     user_data = get_user_data(st.session_state.username)
     if not user_data:
         st.error("User data not found")
         return
-    
+    st.markdown('<div class="main-content fade-in">', unsafe_allow_html=True)
+    st.markdown("## 👤 Your Profile")
     col1, col2 = st.columns([1,2])
     with col1:
         st.markdown(f"""
@@ -549,29 +603,30 @@ def profile_page():
         </div>
         """, unsafe_allow_html=True)
     with col2:
-        st.markdown("### 📊 Statistics")
         plants = user_data.get('plants_identified', 0)
         history = user_data.get('history', [])
+        st.markdown("### 📊 Statistics")
         st.markdown(f"""
         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
             <div class="stat-box"><div class="stat-number">{plants}</div><div>Plants Identified</div></div>
             <div class="stat-box"><div class="stat-number">{len(history)}</div><div>Total Entries</div></div>
         </div>
         """, unsafe_allow_html=True)
-        
         if history:
             st.markdown("### 📜 Recent Plants")
             for item in history[-5:]:
                 st.markdown(f"- **{item['plant']}** - {item['date'][:10]}")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 def identify_page():
+    st.markdown('<div class="main-content fade-in">', unsafe_allow_html=True)
     st.markdown("## 🌱 Identify a Plant")
     uploaded = st.file_uploader("Upload Plant Photo", type=["jpg","jpeg","png"])
     city = st.text_input("Your City", placeholder="e.g., Lagos")
     if uploaded and city:
         image = Image.open(uploaded)
         st.image(image, caption="Your Plant", use_container_width=True)
-        if st.button("Identify", type="primary"):
+        if st.button("🌿 Identify", type="primary"):
             with st.spinner("Analyzing..."):
                 if plant_model:
                     try:
@@ -591,18 +646,20 @@ def identify_page():
                         st.markdown(toxicity)
                         if st.session_state.logged_in:
                             update_user_history(st.session_state.username, plant_name)
-                            st.success("Saved to your history!")
+                            st.success("✅ Saved to your history!")
                     except Exception as e:
                         st.error(f"Error: {e}")
                 else:
                     st.error("Model not available")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 def disease_page():
+    st.markdown('<div class="main-content fade-in">', unsafe_allow_html=True)
     st.markdown("## 🩺 Disease Detection")
     uploaded = st.file_uploader("Upload Diseased Leaf", type=["jpg","jpeg","png"], key="disease")
     if uploaded:
         st.image(uploaded, caption="Leaf", use_container_width=True)
-        if st.button("Detect Disease", type="primary"):
+        if st.button("🔬 Detect Disease", type="primary"):
             with st.spinner("Analyzing..."):
                 import random
                 diseases = {
@@ -619,19 +676,23 @@ def disease_page():
                 **🔬 Treatment:** {diseases[disease]}
                 **🔬 Confidence:** {random.randint(75,95)}%
                 """)
+    st.markdown('</div>', unsafe_allow_html=True)
 
 def video_page():
+    st.markdown('<div class="main-content fade-in">', unsafe_allow_html=True)
     st.markdown("## 📹 Video Analysis")
     video = st.file_uploader("Upload Video", type=["mp4","mov","avi"], key="video")
     if video:
         st.video(video)
-        if st.button("Analyze Video", type="primary"):
+        if st.button("🎬 Analyze Video", type="primary"):
             with st.spinner("Processing..."):
                 st.markdown("**🌿 Plant Identified:** Cassava (78% confidence)")
+    st.markdown('</div>', unsafe_allow_html=True)
 
 def learning_page():
+    st.markdown('<div class="main-content fade-in">', unsafe_allow_html=True)
     st.markdown("## 📚 Learning Center")
-    tabs = st.tabs(["Plant Care", "Disease Prevention", "Farming Tips", "How to Use"])
+    tabs = st.tabs(["🌱 Plant Care", "🩺 Disease Prevention", "🌾 Farming Tips", "📱 How to Use"])
     with tabs[0]:
         st.markdown("""
         ### 🌱 Plant Care
@@ -662,9 +723,11 @@ def learning_page():
         2. Upload and enter city.
         3. Get results: plant name, care, disease alerts, safety.
         """)
+    st.markdown('</div>', unsafe_allow_html=True)
 
 def faq_page():
-    st.markdown("## ❓ FAQ")
+    st.markdown('<div class="main-content fade-in">', unsafe_allow_html=True)
+    st.markdown("## ❓ Frequently Asked Questions")
     faqs = [
         ("What is PlantPal?", "AI-powered farming assistant."),
         ("Is it free?", "Yes, completely free."),
@@ -680,24 +743,26 @@ def faq_page():
     for q,a in faqs:
         with st.expander(f"📌 {q}"):
             st.markdown(a)
+    st.markdown('</div>', unsafe_allow_html=True)
 
 def about_page():
+    st.markdown('<div class="main-content fade-in">', unsafe_allow_html=True)
     st.markdown("## 📖 About PlantPal")
     col1, col2 = st.columns([2,1])
     with col1:
         st.markdown("""
         ### Our Mission
         Empower smallholder farmers with AI technology.
-        
+
         We believe every farmer should have access to:
         - Accurate plant identification
         - Early disease detection
         - Practical farming advice
         - Safety information
-        
+
         ### Our Story
         PlantPal was born from seeing farmers lose crops due to undiagnosed diseases. We built this to make expert knowledge accessible to all.
-        
+
         ### Our Values
         - 🌱 Accessibility
         - 🤝 Community
@@ -711,20 +776,23 @@ def about_page():
         - Users: 50,000+
         - Countries: 100+
         - Accuracy: 92%
-        
+
         ### Contact
         📧 hello@plantpal.com
         📱 +234 800 123 4567
         """)
+    st.markdown('</div>', unsafe_allow_html=True)
 
-# --- Main App ---
+# ============================================
+# MAIN APP
+# ============================================
 def main():
-    # Inject CSS
+    # Inject custom CSS
     st.markdown(get_css(), unsafe_allow_html=True)
-    
+
     # Sidebar
     navigation()
-    
+
     # Page routing
     if st.session_state.page == "home":
         home_page()
@@ -751,7 +819,7 @@ def main():
         about_page()
     else:
         home_page()
-    
+
     # Footer
     st.markdown("""
     <div class="footer">
