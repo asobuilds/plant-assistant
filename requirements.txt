@@ -1,8 +1,6 @@
-gradio
-transformers
-requests
-
 streamlit
 transformers
+torch
+torchvision
 requests
 Pillow
