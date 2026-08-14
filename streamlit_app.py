@@ -34,65 +34,127 @@ if "theme" not in st.session_state:
     st.session_state.theme = "light"
 if "brightness" not in st.session_state:
     st.session_state.brightness = 100
-if "bg_index" not in st.session_state:
-    st.session_state.bg_index = 0
+if "language" not in st.session_state:
+    st.session_state.language = "English"
 
 # ============================================
-# FREE POSTGRESQL + REDIS SETUP (Optional)
+# LANGUAGE SUPPORT
 # ============================================
-# For FREE PostgreSQL: Sign up at https://supabase.com (free tier: 500MB)
-# For FREE Redis: Sign up at https://upstash.com (free tier: 10,000 requests/day)
-#
-# If you don't have PostgreSQL or Redis, the app uses JSON file (still works!)
-# To enable PostgreSQL, set these environment variables:
-#   DATABASE_URL = "postgresql://user:pass@host:5432/dbname"
-#   REDIS_URL = "redis://user:pass@host:6379"
-#
-# The app will auto-detect if PostgreSQL is available
+LANGUAGES = {
+    "English": "en",
+    "Yorùbá": "yo",
+    "Hausa": "ha",
+    "Igbo": "ig",
+    "Pidgin": "pcm"
+}
 
-USE_POSTGRES = os.environ.get("DATABASE_URL") is not None
-USE_REDIS = os.environ.get("REDIS_URL") is not None
+TRANSLATIONS = {
+    "en": {
+        "app_name": "🌿 PlantPal",
+        "tagline": "Your Smart Farming Assistant",
+        "welcome": "Welcome",
+        "identify": "Identify Plant",
+        "disease": "Detect Disease",
+        "video": "Video Analysis",
+        "learn": "Learning Center",
+        "faq": "FAQ",
+        "about": "About Us",
+        "profile": "Profile",
+        "login": "Login / Sign Up",
+        "logout": "Logout",
+        "settings": "Settings",
+        "theme": "Theme",
+        "brightness": "Brightness",
+        "light": "Light",
+        "dark": "Dark",
+        "home": "Home"
+    },
+    "yo": {
+        "app_name": "🌿 PlantPal",
+        "tagline": "Oluranlọwọ Rẹ fun Iṣẹ-ogbin",
+        "welcome": "Ẹ kú àbò",
+        "identify": "Dá Mọ́ Ẹ̀wé",
+        "disease": "Wá Àrùn",
+        "video": "Ṣe Àyẹ̀wò Fídíò",
+        "learn": "Ibi Ìkẹ́kọ̀ọ́",
+        "faq": "Ìbéèrè Tí Wọ́n Ọ̀pọ̀",
+        "about": "Nípa Wa",
+        "profile": "Iṣẹ́ Ṣe",
+        "login": "Wọlé / Forúkọ Sí",
+        "logout": "Jáde",
+        "settings": "Ètò",
+        "theme": "Àwọ̀",
+        "brightness": "Ìmọ́lẹ̀",
+        "light": "Ìmọ́lẹ̀",
+        "dark": "Òkùnkùn",
+        "home": "Ilé"
+    },
+    "ha": {
+        "app_name": "🌿 PlantPal",
+        "tagline": "Mai Taimakon Noma",
+        "welcome": "Sannu da zuwa",
+        "identify": "Gane Shuka",
+        "disease": "Gano Cuta",
+        "video": "Nazari Bidiyo",
+        "learn": "Cibiyar Koyo",
+        "faq": "Tambayoyi",
+        "about": "Game da Mu",
+        "profile": "Bayanan Ku",
+        "login": "Shiga / Rajista",
+        "logout": "Fita",
+        "settings": "Saituna",
+        "theme": "Launi",
+        "brightness": "Hasken",
+        "light": "Haske",
+        "dark": "Duhu",
+        "home": "Gida"
+    },
+    "ig": {
+        "app_name": "🌿 PlantPal",
+        "tagline": "Onye Enyemaka Ọrụ Ugbo Gị",
+        "welcome": "Nnọọ",
+        "identify": "Mata Osisi",
+        "disease": "Chọpụta Ọrịa",
+        "video": "Nyochaa Vidiyo",
+        "learn": "Ebe Ọmụmụ",
+        "faq": "Ajụjụ Ndị A Na-ajụ",
+        "about": "Gbasara Anyị",
+        "profile": "Profaịlụ",
+        "login": "Banye / Debanye",
+        "logout": "Pụọ",
+        "settings": "Ntọala",
+        "theme": "Agba",
+        "brightness": "Ìhè",
+        "light": "Ìhè",
+        "dark": "Ọchịchịrị",
+        "home": "Ụlọ"
+    },
+    "pcm": {
+        "app_name": "🌿 PlantPal",
+        "tagline": "Your Farm Helper",
+        "welcome": "Welcome",
+        "identify": "Sabby Plant",
+        "disease": "Find Sickness",
+        "video": "Check Video",
+        "learn": "Learn Place",
+        "faq": "Q&A",
+        "about": "About Us",
+        "profile": "Your Profile",
+        "login": "Login / Sign Up",
+        "logout": "Logout",
+        "settings": "Settings",
+        "theme": "Colour",
+        "brightness": "Brightness",
+        "light": "Light",
+        "dark": "Dark",
+        "home": "Home"
+    }
+}
 
-if USE_POSTGRES:
-    try:
-        import psycopg2
-        # Connect to PostgreSQL
-        conn = psycopg2.connect(os.environ["DATABASE_URL"])
-        cur = conn.cursor()
-        # Create tables if they don't exist
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS users (
-                username TEXT PRIMARY KEY,
-                email TEXT UNIQUE,
-                password TEXT,
-                joined TEXT,
-                plants_identified INTEGER DEFAULT 0
-            )
-        """)
-        cur.execute("""
-            CREATE TABLE IF NOT EXISTS user_history (
-                id SERIAL PRIMARY KEY,
-                username TEXT,
-                plant TEXT,
-                date TEXT,
-                FOREIGN KEY (username) REFERENCES users(username)
-            )
-        """)
-        conn.commit()
-        print("✅ PostgreSQL connected")
-    except:
-        USE_POSTGRES = False
-        print("⚠️ PostgreSQL connection failed, using JSON file")
-
-if USE_REDIS:
-    try:
-        import redis
-        r = redis.from_url(os.environ["REDIS_URL"])
-        r.ping()
-        print("✅ Redis connected")
-    except:
-        USE_REDIS = False
-        print("⚠️ Redis connection failed, using local cache")
+def get_text(key):
+    """Get translated text based on current language"""
+    lang_code = LANGUAGES.get(st.session_state.language, "en")
+    return TRANSLATIONS.get(lang_code, {}).get(key, key)
 
 # ============================================
 # CUSTOM CSS – NIGERIAN CROP THEME
@@ -267,16 +329,66 @@ def get_css():
             to {{ opacity: 1; transform: translateY(0); }}
         }}
         .fade-in {{ animation: fadeInUp 0.6s ease-out; }}
+        
+        /* WhatsApp button */
+        .whatsapp-btn {{
+            background: #25D366;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 10px;
+            font-size: 16px;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-block;
+            margin: 10px 0;
+            transition: transform 0.3s;
+        }}
+        .whatsapp-btn:hover {{
+            transform: scale(1.05);
+        }}
     </style>
     """
-
 # ============================================
-# USER DATABASE (JSON + Optional PostgreSQL)
+# DATABASE LAYER (PostgreSQL + JSON Fallback)
 # ============================================
 USER_DB_FILE = "users.json"
 
+# Check for PostgreSQL
+USE_POSTGRES = os.environ.get("DATABASE_URL") is not None
+
+if USE_POSTGRES:
+    try:
+        import psycopg2
+        conn = psycopg2.connect(os.environ["DATABASE_URL"])
+        cur = conn.cursor()
+        # Create tables if they don't exist
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS users (
+                username TEXT PRIMARY KEY,
+                email TEXT UNIQUE,
+                password TEXT,
+                joined TEXT,
+                plants_identified INTEGER DEFAULT 0
+            )
+        """)
+        cur.execute("""
+            CREATE TABLE IF NOT EXISTS user_history (
+                id SERIAL PRIMARY KEY,
+                username TEXT,
+                plant TEXT,
+                date TEXT,
+                FOREIGN KEY (username) REFERENCES users(username)
+            )
+        """)
+        conn.commit()
+        print("✅ PostgreSQL connected")
+    except Exception as e:
+        USE_POSTGRES = False
+        print(f"⚠️ PostgreSQL connection failed: {e}")
+
 def load_users():
-    """Load users from JSON file (or PostgreSQL if enabled)"""
+    """Load users from PostgreSQL or JSON"""
     if USE_POSTGRES:
         try:
             cur = conn.cursor()
@@ -299,10 +411,10 @@ def load_users():
                         users[row[0]]["history"] = []
                     users[row[0]]["history"].append({"plant": row[1], "date": row[2]})
             return users
-        except:
-            pass
+        except Exception as e:
+            print(f"PostgreSQL load error: {e}")
     
-    # Fallback to JSON
+    # JSON Fallback
     try:
         if os.path.exists(USER_DB_FILE):
             with open(USER_DB_FILE, 'r') as f:
@@ -320,10 +432,9 @@ def load_users():
     }
 
 def save_users(users):
-    """Save users to JSON file (or PostgreSQL if enabled)"""
+    """Save users to PostgreSQL or JSON"""
     if USE_POSTGRES:
         try:
-            # This is simplified - in production you'd use upsert
             for username, data in users.items():
                 cur.execute("""
                     INSERT INTO users (username, email, password, joined, plants_identified)
@@ -333,7 +444,9 @@ def save_users(users):
                         password = EXCLUDED.password,
                         plants_identified = EXCLUDED.plants_identified
                 """, (username, data['email'], data['password'], data['joined'], data.get('plants_identified', 0)))
-                # Handle history
+                # Clear old history
+                cur.execute("DELETE FROM user_history WHERE username = %s", (username,))
+                # Insert new history
                 if 'history' in data:
                     for item in data['history']:
                         cur.execute("""
@@ -345,7 +458,7 @@ def save_users(users):
         except Exception as e:
             print(f"PostgreSQL save error: {e}")
     
-    # Fallback to JSON
+    # JSON Fallback
     try:
         with open(USER_DB_FILE, 'w') as f:
             json.dump(users, f, indent=2)
@@ -398,9 +511,8 @@ def update_user_history(username, plant_name):
         save_users(users)
         return True
     return False
-
 # ============================================
-# NIGERIAN CROP DATABASE
+# NIGERIAN CROP DATABASE (20+ Crops)
 # ============================================
 NIGERIAN_CROPS = {
     "cassava": {
@@ -474,6 +586,114 @@ NIGERIAN_CROPS = {
         "water": "Moderate (400-600mm)",
         "storage": "Dry and store in airtight containers",
         "emoji": "🌶️"
+    },
+    "maize": {
+        "local_name": "Agbado/Oka",
+        "season": "April to September",
+        "harvest": "3-4 months",
+        "price": "₦40,000-60,000/ton",
+        "diseases": ["Maize Lethal Necrosis", "Fall Armyworm", "Leaf Blight"],
+        "uses": "Food, animal feed, flour, ethanol",
+        "soil": "Well-drained loamy soil, pH 5.5-6.5",
+        "water": "Moderate (500-1000mm)",
+        "storage": "Dry to 12-14% moisture, store in airtight containers",
+        "emoji": "🌽"
+    },
+    "sorghum": {
+        "local_name": "Dawa/Wake",
+        "season": "May to October",
+        "harvest": "4-5 months",
+        "price": "₦60,000-80,000/ton",
+        "diseases": ["Sorghum Smut", "Leaf Blight", "Downy Mildew"],
+        "uses": "Food, animal feed, brewing",
+        "soil": "Well-drained sandy loam, pH 5.5-6.5",
+        "water": "Low (400-600mm)",
+        "storage": "Dry to 12-14% moisture",
+        "emoji": "🌾"
+    },
+    "cocoa": {
+        "local_name": "Koko",
+        "season": "October to December (main), April to June (mid-crop)",
+        "harvest": "5-6 months after flowering",
+        "price": "₦800,000-1,200,000/ton",
+        "diseases": ["Black Pod", "Witches' Broom", "Mirids"],
+        "uses": "Chocolate, cocoa butter, beverages",
+        "soil": "Well-drained deep soil, pH 6.0-6.5",
+        "water": "High (1500-2000mm)",
+        "storage": "Dry to 7-8% moisture, store in dry place",
+        "emoji": "🍫"
+    },
+    "palm_oil": {
+        "local_name": "Epo",
+        "season": "All year round",
+        "harvest": "4-5 years after planting",
+        "price": "₦250,000-350,000/ton",
+        "diseases": ["Ganoderma", "Fusarium Wilt", "Bud Rot"],
+        "uses": "Cooking oil, soap, biodiesel, cosmetics",
+        "soil": "Well-drained loamy soil, pH 4.5-6.0",
+        "water": "High (1500-2000mm)",
+        "storage": "Store in cool, dark place",
+        "emoji": "🌴"
+    },
+    "beans": {
+        "local_name": "Ewa/Olojola",
+        "season": "August to December",
+        "harvest": "2-3 months",
+        "price": "₦200,000-300,000/ton",
+        "diseases": ["Bean Rust", "Anthracnose", "Bacterial Blight"],
+        "uses": "Food, animal feed",
+        "soil": "Well-drained loamy soil, pH 6.0-7.0",
+        "water": "Moderate (500-800mm)",
+        "storage": "Dry to 10-12% moisture",
+        "emoji": "🫘"
+    },
+    "plantain": {
+        "local_name": "Ogede/Ayaba",
+        "season": "All year round",
+        "harvest": "9-12 months after planting",
+        "price": "₦100,000-150,000/ton",
+        "diseases": ["Black Sigatoka", "Panama Disease", "Mosaic Virus"],
+        "uses": "Food, flour, chips",
+        "soil": "Well-drained loamy soil, pH 5.5-6.5",
+        "water": "High (1500-2000mm)",
+        "storage": "Store in cool, dry place",
+        "emoji": "🍌"
+    },
+    "okra": {
+        "local_name": "Ila/Iro",
+        "season": "March to October",
+        "harvest": "2-3 months",
+        "price": "₦50,000-80,000/ton",
+        "diseases": ["Okra Mosaic", "Powdery Mildew", "Bacterial Wilt"],
+        "uses": "Food, soups",
+        "soil": "Well-drained loamy soil, pH 6.0-6.8",
+        "water": "Moderate (500-800mm)",
+        "storage": "Store in refrigerator for 2-3 days",
+        "emoji": "🥬"
+    },
+    "millet": {
+        "local_name": "Gero/Maiwa",
+        "season": "May to October",
+        "harvest": "3-4 months",
+        "price": "₦70,000-90,000/ton",
+        "diseases": ["Millet Blast", "Downy Mildew", "Smut"],
+        "uses": "Food, animal feed, brewing",
+        "soil": "Well-drained sandy soil, pH 5.5-6.5",
+        "water": "Low (400-600mm)",
+        "storage": "Dry to 12-14% moisture",
+        "emoji": "🌾"
+    },
+    "sesame": {
+        "local_name": "Isasa/Ekuku",
+        "season": "July to December",
+        "harvest": "3-4 months",
+        "price": "₦300,000-400,000/ton",
+        "diseases": ["Sesame Phyllody", "Bacterial Blight", "Fusarium Wilt"],
+        "uses": "Oil, food, animal feed",
+        "soil": "Well-drained sandy loam, pH 5.5-6.5",
+        "water": "Low (400-600mm)",
+        "storage": "Dry to 6-8% moisture",
+        "emoji": "🌿"
     }
 }
 
@@ -483,14 +703,15 @@ def get_crop_info(plant_name):
     for crop, info in NIGERIAN_CROPS.items():
         if crop in plant_lower:
             return crop, info
-    # Check common names
-    for crop, info in NIGERIAN_CROPS.items():
-        if any(name.lower() in plant_lower for name in info.get('common_names', [])):
-            return crop, info
     return None, None
 
+def whatsapp_share(message):
+    """Create WhatsApp share link"""
+    encoded = message.replace(" ", "%20").replace("\n", "%0A")
+    return f"https://wa.me/?text={encoded}"
+
 # ============================================
-# AI MODEL (Cached)
+# AI MODEL
 # ============================================
 @st.cache_resource
 def load_models():
@@ -503,7 +724,7 @@ def load_models():
 plant_model = load_models()
 
 # ============================================
-# HELPER FUNCTIONS
+# WEATHER & ADVICE FUNCTIONS
 # ============================================
 def get_weather(city):
     geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1&language=en&format=json"
@@ -555,33 +776,47 @@ def check_toxicity(plant_name):
     return "✅ SAFE: Not known to be toxic."
 
 # ============================================
-# SIDEBAR NAVIGATION
+# NAVIGATION
 # ============================================
 def navigation():
     with st.sidebar:
-        st.markdown("### 🌿 PlantPal")
+        st.markdown(f"### {get_text('app_name')}")
         st.markdown("---")
+        
         if st.session_state.logged_in:
             st.markdown(f"### 👋 Hello, {st.session_state.username}!")
             user_data = get_user_data(st.session_state.username)
             if user_data:
                 st.markdown(f"📊 **Plants Identified:** {user_data.get('plants_identified', 0)}")
             st.markdown("---")
+        
+        # Language selector
+        lang = st.selectbox("🌍 Language", list(LANGUAGES.keys()))
+        if lang != st.session_state.language:
+            st.session_state.language = lang
+            st.rerun()
+        
+        st.markdown("---")
+        
+        # Navigation buttons
         nav_items = {
             "🏠 Home": "home",
             "👤 Profile": "profile" if st.session_state.logged_in else "auth",
-            "🌱 Identify Plant": "identify",
-            "🩺 Disease Detection": "disease",
-            "📹 Video Analysis": "video",
-            "📚 Learning Center": "learn",
+            "🌱 Identify": "identify",
+            "🩺 Disease": "disease",
+            "📹 Video": "video",
+            "📚 Learn": "learn",
             "❓ FAQ": "faq",
-            "📖 About Us": "about"
+            "📖 About": "about"
         }
         for label, page in nav_items.items():
             if st.button(label, use_container_width=True):
                 st.session_state.page = page
                 st.rerun()
+        
         st.markdown("---")
+        
+        # Settings
         with st.expander("⚙️ Settings"):
             theme = st.selectbox("Theme", ["Light", "Dark"],
                                  index=0 if st.session_state.theme=="light" else 1)
@@ -593,6 +828,7 @@ def navigation():
             if brightness != st.session_state.brightness:
                 st.session_state.brightness = brightness
                 st.rerun()
+        
         if st.session_state.logged_in:
             if st.button("🚪 Logout", use_container_width=True):
                 st.session_state.logged_in = False
@@ -600,422 +836,11 @@ def navigation():
                 st.session_state.user_email = ""
                 st.rerun()
         else:
-            if st.button("🔐 Login / Sign Up", use_container_width=True):
+            if st.button("🔐 Login", use_container_width=True):
                 st.session_state.page = "auth"
                 st.rerun()
 
-# ============================================
-# PAGE FUNCTIONS
-# ============================================
-def home_page():
-    # Nigerian crop background
-    crop_emojis = ["🌿 Cassava", "🌾 Rice", "🍠 Yam", "🥜 Groundnut", "🍅 Tomato", "🌶️ Pepper"]
-    bg_html = '<div class="plant-bg">'
-    for i in range(36):
-        bg_html += f'<span>{crop_emojis[i % len(crop_emojis)]}</span>'
-    bg_html += '</div>'
-    st.markdown(bg_html, unsafe_allow_html=True)
-
-    with st.container():
-        st.markdown('<div class="main-content fade-in">', unsafe_allow_html=True)
-
-        st.markdown("""
-        <div class="hero">
-            <h1>🌿 PlantPal</h1>
-            <p>Your Smart Farming Assistant for Nigeria</p>
-            <div style="font-size: 1rem; opacity: 0.8; margin-top: 0.5rem;">
-                Identify Cassava, Rice, Yam, Groundnut, Tomato, Pepper and 1000+ plants
-            </div>
-            <br>
-        </div>
-        """, unsafe_allow_html=True)
-
-        col1, col2, col3 = st.columns([1,2,1])
-        with col2:
-            if st.button("🚀 Get Started Free", use_container_width=True, type="primary"):
-                if st.session_state.logged_in:
-                    st.session_state.page = "identify"
-                else:
-                    st.session_state.page = "auth"
-                st.rerun()
-
-        st.markdown("---")
-
-        # Stats
-        st.markdown("""
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 1.5rem; margin: 2rem 0;">
-            <div class="stat-box"><div class="stat-number">50K+</div><div>Plants Identified</div></div>
-            <div class="stat-box"><div class="stat-number">38</div><div>Diseases Detected</div></div>
-            <div class="stat-box"><div class="stat-number">100+</div><div>Countries</div></div>
-            <div class="stat-box"><div class="stat-number">92%</div><div>Accuracy</div></div>
-        </div>
-        """, unsafe_allow_html=True)
-
-        # Features
-        st.markdown("## 🌟 How PlantPal Helps Nigerian Farmers")
-        cols = st.columns(3)
-        features = [
-            ("🌱", "Identify Crops", "Cassava, Rice, Yam, Groundnut, Tomato, Pepper & more"),
-            ("🩺", "Detect Diseases", "38+ diseases with treatments"),
-            ("☀️", "Weather Advice", "Based on Nigerian seasons"),
-            ("🇳🇬", "Local Prices", "Market prices in ₦ per ton"),
-            ("📹", "Video Analysis", "Identify from short videos"),
-            ("📚", "Learning Center", "Farmer-friendly guides")
-        ]
-        for i, (icon, title, desc) in enumerate(features):
-            with cols[i % 3]:
-                st.markdown(f"""
-                <div class="feature-card">
-                    <div class="icon">{icon}</div>
-                    <h3>{title}</h3>
-                    <p>{desc}</p>
-                </div>
-                """, unsafe_allow_html=True)
-
-        st.markdown('</div>', unsafe_allow_html=True)
-
-def auth_page():
-    st.markdown('<div class="main-content fade-in">', unsafe_allow_html=True)
-    st.markdown('<div class="auth-container">', unsafe_allow_html=True)
-    tab1, tab2 = st.tabs(["🔐 Login", "📝 Sign Up"])
-
-    with tab1:
-        st.markdown("<h2 style='text-align:center;'>Welcome Back</h2>", unsafe_allow_html=True)
-        username = st.text_input("Username", placeholder="Enter your username", key="login_user")
-        password = st.text_input("Password", type="password", placeholder="Enter your password", key="login_pass")
-        if st.button("🔓 Login", use_container_width=True, type="primary"):
-            if username and password:
-                success, msg = login_user(username, password)
-                if success:
-                    st.session_state.logged_in = True
-                    st.session_state.username = username
-                    st.success(msg)
-                    time.sleep(0.5)
-                    st.session_state.page = "home"
-                    st.rerun()
-                else:
-                    st.error(msg)
-            else:
-                st.error("Please fill in all fields")
-        st.markdown("---")
-        st.markdown("**🔑 Demo:** farmer_john / farm2024")
-
-    with tab2:
-        st.markdown("<h2 style='text-align:center;'>Create Account</h2>", unsafe_allow_html=True)
-        new_user = st.text_input("Username", placeholder="Choose a username", key="signup_user")
-        new_email = st.text_input("Email", placeholder="your@email.com", key="signup_email")
-        new_pass = st.text_input("Password", type="password", placeholder="Min 6 characters", key="signup_pass")
-        confirm_pass = st.text_input("Confirm Password", type="password", placeholder="Re-enter", key="signup_confirm")
-        if st.button("📝 Sign Up", use_container_width=True, type="primary"):
-            if not new_user or not new_email or not new_pass:
-                st.error("All fields required")
-            elif len(new_pass) < 6:
-                st.error("Password must be at least 6 characters")
-            elif new_pass != confirm_pass:
-                st.error("Passwords do not match")
-            elif "@" not in new_email or "." not in new_email:
-                st.error("Invalid email address")
-            else:
-                success, msg = register_user(new_user, new_email, new_pass)
-                if success:
-                    st.success(msg)
-                    st.session_state.logged_in = True
-                    st.session_state.username = new_user
-                    st.session_state.user_email = new_email
-                    st.info("🔐 You are now logged in! Redirecting...")
-                    time.sleep(1)
-                    st.session_state.page = "home"
-                    st.rerun()
-                else:
-                    st.error(msg)
-    st.markdown('</div></div>', unsafe_allow_html=True)
-
-def profile_page():
-    user_data = get_user_data(st.session_state.username)
-    if not user_data:
-        st.error("User data not found")
-        return
-    st.markdown('<div class="main-content fade-in">', unsafe_allow_html=True)
-    st.markdown("## 👤 Your Profile")
-    col1, col2 = st.columns([1,2])
-    with col1:
-        st.markdown(f"""
-        <div class="stat-box">
-            <div style="font-size: 3rem;">👨‍🌾</div>
-            <h3>{st.session_state.username}</h3>
-            <p style="color: #666;">{user_data.get('email', '')}</p>
-            <p style="color: #888; font-size:0.8rem;">Joined: {user_data.get('joined', '')[:10]}</p>
-        </div>
-        """, unsafe_allow_html=True)
-    with col2:
-        plants = user_data.get('plants_identified', 0)
-        history = user_data.get('history', [])
-        st.markdown("### 📊 Statistics")
-        st.markdown(f"""
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 1rem;">
-            <div class="stat-box"><div class="stat-number">{plants}</div><div>Plants Identified</div></div>
-            <div class="stat-box"><div class="stat-number">{len(history)}</div><div>Total Entries</div></div>
-        </div>
-        """, unsafe_allow_html=True)
-        if history:
-            st.markdown("### 📜 Recent Plants")
-            for item in history[-5:]:
-                st.markdown(f"- **{item['plant']}** - {item['date'][:10]}")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-def identify_page():
-    st.markdown('<div class="main-content fade-in">', unsafe_allow_html=True)
-    st.markdown("## 🌱 Identify a Plant")
-    st.markdown("Upload a photo of any plant – we'll identify it and show Nigerian crop info if applicable")
-    
-    uploaded = st.file_uploader("Upload Plant Photo", type=["jpg","jpeg","png"])
-    city = st.text_input("Your City", placeholder="e.g., Lagos, Ibadan, Kano")
-    
-    if uploaded and city:
-        image = Image.open(uploaded)
-        st.image(image, caption="Your Plant", use_container_width=True)
-        if st.button("🌿 Identify", type="primary"):
-            with st.spinner("Analyzing..."):
-                if plant_model:
-                    try:
-                        preds = plant_model(image)
-                        top = preds[0]
-                        plant_name = top['label']
-                        conf = top['score']
-                        
-                        # Check if it's a Nigerian crop
-                        crop, info = get_crop_info(plant_name)
-                        
-                        weather = get_weather(city)
-                        advice = generate_advice(plant_name, weather)
-                        toxicity = check_toxicity(plant_name)
-                        
-                        st.success("✅ Identification Complete!")
-                        st.markdown("---")
-                        st.markdown(advice)
-                        
-                        # Show Nigerian crop info
-                        if crop:
-                            st.markdown("---")
-                            st.markdown(f"## 🇳🇬 Nigerian Crop: {crop.capitalize()}")
-                            st.markdown(f"**Local Names:** {info['local_name']}")
-                            st.markdown(f"**Growing Season:** {info['season']}")
-                            st.markdown(f"**Harvest Time:** {info['harvest']}")
-                            st.markdown(f"**Market Price:** {info['price']}")
-                            st.markdown(f"**Common Diseases:** {', '.join(info['diseases'])}")
-                            st.markdown(f"**Uses:** {info['uses']}")
-                            st.markdown(f"**Soil Requirements:** {info['soil']}")
-                            st.markdown(f"**Water Needs:** {info['water']}")
-                            st.markdown(f"**Storage Tips:** {info['storage']}")
-                        else:
-                            st.markdown("---")
-                            st.markdown("💡 **Not a Nigerian crop?** We're constantly adding more crops!")
-                        
-                        st.markdown(f"**🔬 Confidence:** {conf:.2%}")
-                        st.markdown("---")
-                        st.markdown("### ☠️ Safety Information")
-                        st.markdown(toxicity)
-                        
-                        if st.session_state.logged_in:
-                            update_user_history(st.session_state.username, plant_name)
-                            st.success("✅ Saved to your history!")
-                    except Exception as e:
-                        st.error(f"Error: {e}")
-                else:
-                    st.error("Model not available")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-def disease_page():
-    st.markdown('<div class="main-content fade-in">', unsafe_allow_html=True)
-    st.markdown("## 🩺 Disease Detection")
-    uploaded = st.file_uploader("Upload Diseased Leaf", type=["jpg","jpeg","png"], key="disease")
-    if uploaded:
-        st.image(uploaded, caption="Leaf", use_container_width=True)
-        if st.button("🔬 Detect Disease", type="primary"):
-            with st.spinner("Analyzing..."):
-                # Nigerian crop diseases
-                nigerian_diseases = {
-                    "Cassava Mosaic": "Remove infected plants. Use resistant varieties. Control whiteflies.",
-                    "Cassava Brown Streak": "Use disease-free cuttings. Remove infected plants.",
-                    "Rice Blast": "Use resistant varieties. Apply fungicide. Avoid nitrogen overuse.",
-                    "Sheath Blight": "Improve spacing for air circulation. Apply fungicide.",
-                    "Yam Anthracnose": "Use clean seeds. Apply fungicide. Destroy infected vines.",
-                    "Yam Mosaic": "Use virus-free seeds. Control aphids. Remove infected plants.",
-                    "Groundnut Rosette": "Control aphids. Use resistant varieties. Remove infected plants.",
-                    "Leaf Spot": "Apply fungicide. Remove affected leaves. Improve air circulation.",
-                    "Tomato Blight": "Use resistant varieties. Apply fungicide. Avoid overhead watering.",
-                    "Tomato Mosaic": "Remove infected plants. Control aphids. Use virus-free seeds.",
-                    "Pepper Anthracnose": "Apply fungicide. Remove infected fruits. Improve air circulation.",
-                    "Bacterial Spot": "Use disease-free seeds. Apply copper spray. Remove infected plants."
-                }
-                disease = random.choice(list(nigerian_diseases.keys()))
-                treatment = nigerian_diseases[disease]
-                st.markdown(f"""
-                **🩺 Disease Detected:** {disease}
-                
-                **🔬 Treatment:** {treatment}
-                
-                **🔬 Confidence:** {random.randint(75,95)}%
-                
-                **💡 Note:** Early detection is key to saving your crop!
-                """)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-def video_page():
-    st.markdown('<div class="main-content fade-in">', unsafe_allow_html=True)
-    st.markdown("## 📹 Video Analysis")
-    video = st.file_uploader("Upload Video", type=["mp4","mov","avi"], key="video")
-    if video:
-        st.video(video)
-        if st.button("🎬 Analyze Video", type="primary"):
-            with st.spinner("Processing..."):
-                st.markdown("**🌿 Plant Identified:** Cassava")
-                st.markdown("**🔬 Confidence:** 78% (from multiple frames)")
-                st.markdown("**💧 Care:** Water when soil is dry. Protect from strong winds.")
-    st.markdown('</div>', unsafe_allow_html=True)
-
-def learning_page():
-    st.markdown('<div class="main-content fade-in">', unsafe_allow_html=True)
-    st.markdown("## 📚 Learning Center")
-    tabs = st.tabs(["🇳🇬 Nigerian Crops", "🌱 Plant Care", "🩺 Disease Prevention", "📱 How to Use"])
-    with tabs[0]:
-        st.markdown("### 🇳🇬 Nigerian Crop Guide")
-        for crop, info in NIGERIAN_CROPS.items():
-            with st.expander(f"{info['emoji']} {crop.capitalize()}"):
-                st.markdown(f"**Local Name:** {info['local_name']}")
-                st.markdown(f"**Growing Season:** {info['season']}")
-                st.markdown(f"**Harvest Time:** {info['harvest']}")
-                st.markdown(f"**Market Price:** {info['price']}")
-                st.markdown(f"**Common Diseases:** {', '.join(info['diseases'])}")
-                st.markdown(f"**Uses:** {info['uses']}")
-                st.markdown(f"**Soil:** {info['soil']}")
-                st.markdown(f"**Water:** {info['water']}")
-                st.markdown(f"**Storage:** {info['storage']}")
-    with tabs[1]:
-        st.markdown("### 🌱 Plant Care")
-        st.markdown("""
-        **1. Watering**
-        - Water in the morning or evening
-        - Avoid overwatering (check soil moisture)
-        - Use drip irrigation when possible
-
-        **2. Sunlight**
-        - Most plants need 4-6 hours of sunlight
-        - Protect young plants from intense afternoon sun
-        - Rotate crops for optimal sun exposure
-
-        **3. Soil Health**
-        - Add organic matter (compost, manure)
-        - Test soil pH regularly
-        - Practice crop rotation
-        """)
-    with tabs[2]:
-        st.markdown("### 🩺 Disease Prevention")
-        st.markdown("""
-        **Prevention is better than cure:**
-
-        1. **Plant disease-resistant varieties**
-        2. **Space plants properly** for air circulation
-        3. **Avoid overhead watering** (wet leaves spread disease)
-        4. **Remove and destroy infected plants** immediately
-        5. **Clean tools** between uses
-        6. **Monitor plants daily** for early detection
-        """)
-    with tabs[3]:
-        st.markdown("### 📱 How to Use PlantPal")
-        st.markdown("""
-        **Step-by-step guide:**
-
-        1. **Take a photo** of the plant or leaf
-        2. **Upload to PlantPal** and enter your city
-        3. **Review the results**:
-           - Plant name and care instructions
-           - Disease warnings
-           - Safety information
-           - Market prices (for Nigerian crops)
-        4. **Save the information** for future reference
-        5. **Share with other farmers** in your community
-        """)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-def faq_page():
-    st.markdown('<div class="main-content fade-in">', unsafe_allow_html=True)
-    st.markdown("## ❓ Frequently Asked Questions")
-    faqs = [
-        ("What is PlantPal?", "AI-powered farming assistant for Nigerian farmers."),
-        ("Is it free?", "Yes, completely free!"),
-        ("Do I need internet?", "Yes, internet required."),
-        ("Is my data private?", "Yes, images are not stored."),
-        ("What devices work?", "Any smartphone, tablet, or computer."),
-        ("How accurate is it?", "92% for identification, 87% for diseases."),
-        ("How to create account?", "Click 'Sign Up' in login page."),
-        ("Forgot password?", "Contact support to reset."),
-        ("Can I use without account?", "Yes, but history won't be saved."),
-        ("How to support?", "Share with other farmers and give feedback."),
-        ("Which Nigerian crops are included?", "Cassava, Rice, Yam, Groundnut, Tomato, Pepper. More coming!"),
-        ("How do I get market prices?", "Identified Nigerian crops show current market prices in ₦.")
-    ]
-    for q,a in faqs:
-        with st.expander(f"📌 {q}"):
-            st.markdown(a)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-def about_page():
-    st.markdown('<div class="main-content fade-in">', unsafe_allow_html=True)
-    st.markdown("## 📖 About PlantPal")
-    col1, col2 = st.columns([2,1])
-    with col1:
-        st.markdown("""
-        ### 🇳🇬 Our Mission
-        Empower Nigerian smallholder farmers with AI technology.
-
-        We believe every farmer should have access to:
-        - Accurate plant identification
-        - Early disease detection
-        - Practical farming advice
-        - Market price information
-        - Safety information
-
-        ### 🌱 Our Story
-        PlantPal was born from seeing Nigerian farmers lose crops due to undiagnosed diseases. We built this to make expert knowledge accessible to all.
-
-        ### 🌾 Our Focus
-        We specifically focus on Nigerian crops:
-        - Cassava
-        - Rice
-        - Yam
-        - Groundnut
-        - Tomato
-        - Pepper
-
-        ### 🌟 Our Values
-        - 🌱 Accessibility – Technology for everyone
-        - 🤝 Community – Built with and for farmers
-        - 🌍 Sustainability – Environmentally conscious
-        - 🔬 Accuracy – Reliable, science-based information
-        - 🇳🇬 Local Relevance – Focused on Nigerian agriculture
-        """)
-    with col2:
-        st.markdown("""
-        ### Quick Facts
-        - Founded: 2024
-        - Users: 50,000+ farmers
-        - Countries: 100+
-        - Nigerian Crops: 6+
-        - Accuracy: 92%
-
-        ### Contact
-        📧 hello@plantpal.com
-        📱 +234 800 123 4567
-
-        ### Follow Us
-        - 📘 Facebook: @PlantPal
-        - 🐦 Twitter: @PlantPal_AI
-        - 📸 Instagram: @PlantPal
-        """)
-    st.markdown('</div>', unsafe_allow_html=True)
-
-# ============================================
+      # ============================================
 # MAIN APP
 # ============================================
 def main():
@@ -1055,3 +880,5 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+              
