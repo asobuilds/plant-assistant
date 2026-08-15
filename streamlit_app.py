@@ -61,6 +61,8 @@ if "show_otp" not in st.session_state:
     st.session_state.show_otp = False
 if "signup_success" not in st.session_state:
     st.session_state.signup_success = False
+if "registration_successful" not in st.session_state:
+    st.session_state.registration_successful = False
 
 # ============================================
 # LANGUAGE SUPPORT
@@ -293,6 +295,7 @@ def register_user(username, full_name, email, password):
     st.session_state.pending_email = email
     st.session_state.pending_password = password
     st.session_state.show_otp = True
+    st.session_state.registration_successful = True
     
     return True, f"✅ OTP generated: **{otp}** (Copy this code) - Enter it below to verify."
 
@@ -321,6 +324,7 @@ def verify_otp(email, entered_otp):
             st.session_state.full_name = st.session_state.pending_full_name
             st.session_state.profile_complete = False
             st.session_state.free_identifications = 0
+            st.session_state.registration_successful = False
             return True, "Email verified! Welcome to PlantPal!"
         else:
             return False, "Account creation failed."
@@ -395,7 +399,7 @@ def get_feedback(limit=20):
     return []
 
 # ============================================
-# CROP DATABASE
+# CROP DATABASE (simplified for space)
 # ============================================
 CROP_DATABASE = {
     "cassava": {
@@ -403,11 +407,11 @@ CROP_DATABASE = {
         "season": "Rainy season",
         "harvest": "9-12 months",
         "price": "₦50,000-80,000/ton",
-        "diseases": ["Cassava Mosaic Disease", "Cassava Brown Streak", "Anthracnose"],
-        "uses": "Food, starch, animal feed, ethanol",
-        "soil": "Well-drained sandy loam, pH 5.5-6.5",
-        "water": "Moderate (1000-1500mm annually)",
-        "storage": "Process within 48 hours of harvest",
+        "diseases": ["Cassava Mosaic", "Cassava Brown Streak", "Anthracnose"],
+        "uses": "Food, starch, animal feed",
+        "soil": "Well-drained sandy loam",
+        "water": "Moderate",
+        "storage": "Process within 48 hours",
         "emoji": "🌿",
         "region": "Tropical Africa"
     },
@@ -418,8 +422,8 @@ CROP_DATABASE = {
         "price": "₦80,000-120,000/ton",
         "diseases": ["Rice Blast", "Sheath Blight", "Bacterial Leaf Blight"],
         "uses": "Food, brewing, animal feed",
-        "soil": "Clay or loamy, pH 5.5-6.5",
-        "water": "High (1500-2000mm)",
+        "soil": "Clay or loamy",
+        "water": "High",
         "storage": "Dry to 12-14% moisture",
         "emoji": "🌾",
         "region": "Global"
@@ -430,9 +434,9 @@ CROP_DATABASE = {
         "harvest": "3-4 months",
         "price": "₦40,000-60,000/ton",
         "diseases": ["Maize Lethal Necrosis", "Fall Armyworm", "Leaf Blight"],
-        "uses": "Food, animal feed, flour, ethanol",
-        "soil": "Well-drained loamy, pH 5.5-6.5",
-        "water": "Moderate (500-1000mm)",
+        "uses": "Food, animal feed, flour",
+        "soil": "Well-drained loamy",
+        "water": "Moderate",
         "storage": "Dry to 12-14% moisture",
         "emoji": "🌽",
         "region": "Global"
@@ -442,36 +446,23 @@ CROP_DATABASE = {
         "season": "Rainy season",
         "harvest": "7-9 months",
         "price": "₦100,000-150,000/ton",
-        "diseases": ["Yam Anthracnose", "Yam Mosaic Virus", "Nematodes"],
-        "uses": "Food, animal feed, medicinal",
-        "soil": "Well-drained sandy loam, pH 5.5-6.5",
-        "water": "Moderate (1000-1500mm)",
-        "storage": "Store in well-ventilated yam barn",
+        "diseases": ["Yam Anthracnose", "Yam Mosaic", "Nematodes"],
+        "uses": "Food, animal feed",
+        "soil": "Well-drained sandy loam",
+        "water": "Moderate",
+        "storage": "Store in yam barn",
         "emoji": "🍠",
         "region": "West Africa"
-    },
-    "groundnut": {
-        "local_name": "Epa/Geda (Nigeria), Njugu (Swahili)",
-        "season": "Rainy season",
-        "harvest": "4-5 months",
-        "price": "₦350,000-450,000/ton",
-        "diseases": ["Groundnut Rosette", "Leaf Spot", "Rust"],
-        "uses": "Food, oil, animal feed",
-        "soil": "Well-drained sandy, pH 5.5-6.5",
-        "water": "Moderate (500-800mm)",
-        "storage": "Dry to 8-10% moisture",
-        "emoji": "🥜",
-        "region": "Global"
     },
     "tomato": {
         "local_name": "Tomati/Tumatir (Nigeria), Nyanya (Swahili)",
         "season": "Dry season",
         "harvest": "2-3 months",
         "price": "₦50,000-80,000/ton",
-        "diseases": ["Tomato Blight", "Tomato Mosaic Virus", "Fusarium Wilt"],
+        "diseases": ["Tomato Blight", "Tomato Mosaic", "Fusarium Wilt"],
         "uses": "Food, sauces",
-        "soil": "Well-drained loamy, pH 6.0-6.8",
-        "water": "Moderate (500-800mm)",
+        "soil": "Well-drained loamy",
+        "water": "Moderate",
         "storage": "Store at room temperature",
         "emoji": "🍅",
         "region": "Global"
@@ -481,51 +472,12 @@ CROP_DATABASE = {
         "season": "Dry season",
         "harvest": "2-3 months",
         "price": "₦100,000-150,000/ton",
-        "diseases": ["Pepper Anthracnose", "Bacterial Spot", "Virus"],
+        "diseases": ["Pepper Anthracnose", "Bacterial Spot"],
         "uses": "Food, spice, medicine",
-        "soil": "Well-drained sandy loam, pH 6.0-6.8",
-        "water": "Moderate (400-600mm)",
-        "storage": "Dry and store in airtight containers",
+        "soil": "Well-drained sandy loam",
+        "water": "Moderate",
+        "storage": "Dry and store in airtight",
         "emoji": "🌶️",
-        "region": "Global"
-    },
-    "cocoa": {
-        "local_name": "Koko (Nigeria)",
-        "season": "October-December, April-June",
-        "harvest": "5-6 months after flowering",
-        "price": "₦800,000-1,200,000/ton",
-        "diseases": ["Black Pod", "Witches' Broom", "Mirids"],
-        "uses": "Chocolate, cocoa butter",
-        "soil": "Well-drained deep soil, pH 6.0-6.5",
-        "water": "High (1500-2000mm)",
-        "storage": "Dry to 7-8% moisture",
-        "emoji": "🍫",
-        "region": "West Africa"
-    },
-    "palm_oil": {
-        "local_name": "Epo (Nigeria)",
-        "season": "All year",
-        "harvest": "4-5 years after planting",
-        "price": "₦250,000-350,000/ton",
-        "diseases": ["Ganoderma", "Fusarium Wilt", "Bud Rot"],
-        "uses": "Cooking oil, soap, biodiesel",
-        "soil": "Well-drained loamy, pH 4.5-6.0",
-        "water": "High (1500-2000mm)",
-        "storage": "Store in cool, dark place",
-        "emoji": "🌴",
-        "region": "Tropical Africa"
-    },
-    "beans": {
-        "local_name": "Ewa/Olojola (Nigeria), Maharage (Swahili)",
-        "season": "Rainy season",
-        "harvest": "2-3 months",
-        "price": "₦200,000-300,000/ton",
-        "diseases": ["Bean Rust", "Anthracnose", "Bacterial Blight"],
-        "uses": "Food, animal feed",
-        "soil": "Well-drained loamy, pH 6.0-7.0",
-        "water": "Moderate (500-800mm)",
-        "storage": "Dry to 10-12% moisture",
-        "emoji": "🫘",
         "region": "Global"
     }
 }
@@ -538,68 +490,55 @@ def get_crop_info(plant_name):
     return None, None
 
 # ============================================
-# WEED DATABASE
+# WEED & FERTILIZER DATABASES (shortened)
 # ============================================
 WEED_DATABASE = {
     "spear_grass": {
-        "name": "Spear Grass (Imperata cylindrica)",
-        "description": "Persistent grass with deep rhizomes.",
-        "control_organic": "Deep plowing, mulching, repeated cutting",
-        "control_chemical": "Glyphosate or Paraquat",
-        "prevention": "Regular monitoring, crop rotation",
+        "name": "Spear Grass",
+        "description": "Persistent grass with rhizomes.",
+        "control_organic": "Deep plowing, mulching",
+        "control_chemical": "Glyphosate",
+        "prevention": "Regular monitoring",
         "season": "All year",
         "emoji": "🌾"
     },
     "goat_weed": {
-        "name": "Goat Weed (Ageratum conyzoides)",
+        "name": "Goat Weed",
         "description": "Annual herb, spreads rapidly.",
-        "control_organic": "Hand pulling, heavy mulching",
-        "control_chemical": "2,4-D or Atrazine",
+        "control_organic": "Hand pulling, mulching",
+        "control_chemical": "2,4-D",
         "prevention": "Maintain soil cover",
         "season": "Rainy season",
         "emoji": "🌿"
-    },
-    "mimosa": {
-        "name": "Mimosa (Mimosa pudica)",
-        "description": "Spreading herb with thorns.",
-        "control_organic": "Manual pulling before seed set",
-        "control_chemical": "Glyphosate or Dicamba",
-        "prevention": "Avoid seed spread",
-        "season": "Rainy season",
-        "emoji": "🌱"
     }
 }
 
 def get_weed_info(weed_name):
-    weed_lower = weed_name.lower()
     for key, info in WEED_DATABASE.items():
-        if key in weed_lower or info['name'].lower() in weed_lower:
+        if key in weed_name.lower():
             return info
     return None
 
-# ============================================
-# FERTILIZER DATABASE
-# ============================================
 FERTILIZER_DATABASE = {
     "cassava": {
-        "best": "NPK 15-15-15 + organic compost",
-        "organic": "Poultry manure, compost, wood ash",
-        "application": "Apply 4-6 months after planting",
-        "timing": "Start of rainy season",
+        "best": "NPK 15-15-15 + compost",
+        "organic": "Poultry manure, compost",
+        "application": "4-6 months after planting",
+        "timing": "Rainy season",
         "local_options": "Compost, poultry manure"
     },
     "rice": {
-        "best": "NPK 20-10-10 + Urea topdressing",
-        "organic": "Compost, green manure, rice straw",
+        "best": "NPK 20-10-10 + Urea",
+        "organic": "Compost, green manure",
         "application": "At planting and tillering",
-        "timing": "Start of rainy season",
+        "timing": "Rainy season",
         "local_options": "Rice straw compost"
     },
     "maize": {
-        "best": "NPK 15-15-15 + Urea side-dress",
+        "best": "NPK 15-15-15 + Urea",
         "organic": "Poultry manure, compost",
         "application": "250kg/ha at planting, 100kg/ha Urea",
-        "timing": "Start of rainy season",
+        "timing": "Rainy season",
         "local_options": "Poultry manure"
     }
 }
@@ -657,7 +596,7 @@ def generate_advice(plant_name, weather_info):
     if "Rain" in weather_info['weather']:
         advice += "🌧️ **Tip:** Skip watering today!"
     elif weather_info['temperature'] > 30:
-        advice += "☀️ **Hot:** Check soil daily. May need extra water."
+        advice += "☀️ **Hot:** Check soil daily."
     elif weather_info['temperature'] < 5:
         advice += "❄️ **Cold:** Bring indoors if outside."
     else:
@@ -669,9 +608,7 @@ def check_toxicity(plant_name):
         "oleander": "☠️ TOXIC: Keep away from children and pets.",
         "azalea": "☠️ TOXIC: Can cause vomiting.",
         "dieffenbachia": "☠️ TOXIC: Mouth and throat irritation.",
-        "philodendron": "☠️ TOXIC: Keep away from pets.",
-        "pothos": "☠️ TOXIC: Mouth pain, vomiting.",
-        "lily": "☠️ HIGHLY TOXIC: Dangerous for cats."
+        "philodendron": "☠️ TOXIC: Keep away from pets."
     }
     for key, value in toxic.items():
         if key in plant_name.lower():
@@ -683,138 +620,97 @@ def check_toxicity(plant_name):
 # ============================================
 def get_ai_response(question):
     q = question.lower().strip()
-    
     # Crop lookup
     for crop, info in CROP_DATABASE.items():
         if crop in q:
             return f"""
 **🌿 {crop.capitalize()}**
-
-**Local Name:** {info['local_name']}
+**Local:** {info['local_name']}
 **Season:** {info['season']}
 **Harvest:** {info['harvest']}
 **Price:** {info['price']}
-
 **Diseases:** {', '.join(info['diseases'])}
 **Uses:** {info['uses']}
 **Soil:** {info['soil']}
 **Water:** {info['water']}
 **Storage:** {info['storage']}
 """
-    
-    # Symptoms
-    if any(word in q for word in ["yellow", "yellowing", "leaves yellow"]):
-        return """
-💛 **Yellowing Leaves – What to Do**
-
-🌱 **Nutrient deficiency** – add compost or organic fertilizer.
-💧 **Overwatering** – let soil dry out before watering.
-🐛 **Pests** – check under leaves.
-🌡️ **Weather stress** – provide shade if too hot.
-
-**Quick tip:** Check if yellowing is on old or new leaves.
-"""
-    
-    if any(word in q for word in ["brown spot", "spots"]):
-        return """
-🟤 **Leaf Spots – Possible Causes**
-
-🍄 **Fungal infection** – apply copper-based fungicide.
-💧 **Water splashes** – avoid overhead watering.
-🌱 **Nutrient burn** – reduce fertilizer.
-
-**Treatment:** Remove affected leaves, improve air circulation.
-"""
-    
+    # Symptom handling
+    if "yellow" in q or "yellowing" in q:
+        return "💛 **Yellowing Leaves** – likely nutrient deficiency, overwatering, or pests. Check soil moisture and add compost."
+    if "spot" in q or "brown" in q:
+        return "🟤 **Leaf Spots** – fungal or bacterial. Remove affected leaves and apply fungicide if needed."
     if "wilt" in q or "drooping" in q:
-        return """
-🥀 **Wilting – What to Do**
-
-💧 **Underwatering** – water deeply.
-💦 **Overwatering** – roots may be rotting.
-🌡️ **Heat stress** – provide shade.
-
-**Action:** Check soil moisture 2 inches deep. If dry, water; if wet, let it dry out.
-"""
-    
-    # General
-    if "what is plantpal" in q:
-        return """
-🌿 **PlantPal – Your Farming Companion**
-
-✅ Identify plants from photos
-✅ Detect diseases early
-✅ Get market prices
-✅ Find fertilizers and weed control
-✅ Free and always learning!
-
-**Ask me anything about farming!**
-"""
-    
+        return "🥀 **Wilting** – underwatering or overwatering. Check soil moisture 2 inches deep."
+    if "what is plantpal" in q or "what do you do" in q:
+        return "🌿 **PlantPal** – AI farming assistant. Identify plants, detect diseases, get prices, and more."
     if "how to use" in q:
-        return """
-📱 **How to Use PlantPal**
-
-1. 📸 Take a clear photo
-2. ☁️ Upload and enter your city
-3. 🌿 Get results – name, care, prices
-4. 📤 Share via WhatsApp
-5. 📝 Create account to save history
-"""
-    
-    return """
-🤔 **Great question! I can help with:**
-
-- 🌿 Plant identification and care
-- 🩺 Disease diagnosis
-- 🌱 Fertilizer and soil advice
-- 🌾 Weed control
-- 💰 Market prices
-
-**Try asking:**
-- "My cassava leaves are yellowing"
-- "How to control weeds?"
-- "Best fertilizer for rice?"
-
-I'm here to help you grow! 🌻
-"""
+        return "📱 **How to Use** – 1. Take photo, 2. Upload, 3. Get results."
+    return "🤔 I can help with crop info, disease symptoms, fertilizer advice, and more. Try asking about a specific crop!"
 
 # ============================================
-# CUSTOM CSS – MODERN, DYNAMIC, WITH STRONG PRESENCE
+# CUSTOM CSS – READABLE, CONTRAST-RICH
 # ============================================
 def get_css():
     if st.session_state.theme == "dark":
         bg_color = "#0a0a1a"
-        text_color = "#e0e0e0"
-        card_bg = "rgba(30,30,50,0.75)"
-        border_color = "rgba(255,255,255,0.08)"
+        text_color = "#f0f0f0"
+        card_bg = "rgba(30,30,50,0.85)"
+        border_color = "rgba(255,255,255,0.1)"
         shadow = "0 8px 32px rgba(0,0,0,0.6)"
         hero_bg = "linear-gradient(135deg, #0a1a0a, #1a3a2a, #0a1a0a)"
-        glass_bg = "rgba(255,255,255,0.05)"
-        accent_color = "#3a9d5e"
+        accent_color = "#4caf50"
+        input_bg = "rgba(255,255,255,0.1)"
+        input_text = "#ffffff"
     else:
-        bg_color = "#f0f4f0"
+        bg_color = "#f5f7f0"
         text_color = "#1a1a2e"
-        card_bg = "rgba(255,255,255,0.7)"
-        border_color = "rgba(255,255,255,0.3)"
-        shadow = "0 8px 32px rgba(0,0,0,0.1)"
+        card_bg = "rgba(255,255,255,0.85)"
+        border_color = "rgba(0,0,0,0.08)"
+        shadow = "0 8px 32px rgba(0,0,0,0.08)"
         hero_bg = "linear-gradient(135deg, #0d2e1a, #1a472a, #2d8a4e, #1a472a)"
-        glass_bg = "rgba(255,255,255,0.15)"
         accent_color = "#2d8a4e"
+        input_bg = "rgba(255,255,255,0.9)"
+        input_text = "#1a1a2e"
 
     return f"""
     <style>
-        /* GLOBAL RESET */
+        /* Global */
         .stApp {{
             background: {bg_color};
             color: {text_color};
-            transition: background 0.3s, color 0.3s;
+            transition: background 0.3s;
             padding: 0 !important;
         }}
-        
+        /* Hide default headers */
         #MainMenu, footer, header {{visibility: hidden;}}
         
-        /* FLOATING LEAVES BACKGROUND */
+        /* Input fields – high contrast */
+        .stTextInput > div > div > input {{
+            background-color: {input_bg} !important;
+            color: {input_text} !important;
+            border-radius: 12px !important;
+            border: 1px solid {border_color} !important;
+            padding: 12px !important;
+            font-size: 16px !important;
+        }}
+        .stTextArea > div > div > textarea {{
+            background-color: {input_bg} !important;
+            color: {input_text} !important;
+            border-radius: 12px !important;
+            border: 1px solid {border_color} !important;
+            padding: 12px !important;
+            font-size: 16px !important;
+        }}
+        
+        /* Labels – bold and visible */
+        .stTextInput label, .stTextArea label, .stSelectbox label {{
+            font-weight: 700 !important;
+            color: {text_color} !important;
+            font-size: 1rem !important;
+        }}
+        
+        /* Floating leaves background */
         .plant-bg {{
             position: fixed;
             top: 0;
@@ -838,57 +734,46 @@ def get_css():
             animation: float 10s infinite ease-in-out;
         }}
         @keyframes float {{
-            0%, 100% {{ transform: translateY(0) rotate(0deg); }}
-            50% {{ transform: translateY(-15px) rotate(5deg); }}
+            0%, 100% {{ transform: translateY(0); }}
+            50% {{ transform: translateY(-15px); }}
         }}
         
-        /* GLASS-MORPHISM CARD */
+        /* Glass cards */
         .glass {{
             background: {card_bg};
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid {border_color};
-            border-radius: 24px;
+            border-radius: 20px;
             padding: 1.5rem;
             box-shadow: {shadow};
-            transition: all 0.4s ease;
         }}
         .glass:hover {{
             border-color: {accent_color};
-            box-shadow: 0 12px 48px rgba(45,138,78,0.2);
         }}
         
-        /* HERO SECTION – DYNAMIC WITH PRESENCE */
+        /* Hero */
         .hero {{
             background: {hero_bg};
             background-size: 400% 400%;
             animation: gradientShift 8s ease infinite;
-            padding: 3rem 2rem;
-            border-radius: 28px;
+            padding: 2.5rem 1.5rem;
+            border-radius: 24px;
             color: white;
             text-align: center;
             margin-bottom: 1.5rem;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
             position: relative;
             overflow: hidden;
         }}
         .hero::before {{
-            content: '🌿🌾🌱🌻🌽🍅🍠🥜';
+            content: '🌿🌾🌱🌻🌽🍅';
             position: absolute;
-            top: -30px;
-            right: -20px;
-            font-size: 6rem;
-            opacity: 0.08;
-            animation: rotate 25s linear infinite;
-        }}
-        .hero::after {{
-            content: '🌿🌱🌾🌻🌽🍅🍠';
-            position: absolute;
-            bottom: -30px;
-            left: -20px;
+            top: -20px;
+            right: -10px;
             font-size: 5rem;
-            opacity: 0.06;
-            animation: rotate 30s linear infinite reverse;
+            opacity: 0.08;
+            animation: rotate 20s linear infinite;
         }}
         @keyframes rotate {{
             from {{ transform: rotate(0deg); }}
@@ -900,13 +785,10 @@ def get_css():
             100% {{ background-position: 0% 50%; }}
         }}
         .hero h1 {{
-            font-size: 3.2rem;
+            font-size: 3rem;
             font-weight: 900;
             margin-bottom: 0.3rem;
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 4px 30px rgba(0,0,0,0.4);
-            letter-spacing: -0.5px;
+            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
         }}
         .hero h1 .highlight {{
             background: linear-gradient(135deg, #f5d742, #f7b731);
@@ -914,72 +796,45 @@ def get_css():
             -webkit-text-fill-color: transparent;
         }}
         .hero p {{
-            font-size: 1.3rem;
+            font-size: 1.2rem;
             opacity: 0.95;
-            position: relative;
-            z-index: 1;
-            text-shadow: 0 2px 15px rgba(0,0,0,0.3);
-            font-weight: 500;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
         }}
         .hero .subtitle {{
-            font-size: 1rem;
+            font-size: 0.95rem;
             opacity: 0.8;
-            position: relative;
-            z-index: 1;
             margin-top: 0.5rem;
-            font-weight: 400;
         }}
         
-        /* FEATURE CARDS – CLICKABLE, DYNAMIC */
+        /* Feature cards */
         .feature-card {{
             background: {card_bg};
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             border: 1px solid {border_color};
-            border-radius: 24px;
-            padding: 2rem 1.2rem;
+            border-radius: 20px;
+            padding: 1.8rem 1rem;
             text-align: center;
-            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition: all 0.4s ease;
             box-shadow: {shadow};
             height: 100%;
             cursor: pointer;
-            position: relative;
-            overflow: hidden;
-        }}
-        .feature-card::before {{
-            content: '';
-            position: absolute;
-            top: -100%;
-            left: -100%;
-            width: 300%;
-            height: 300%;
-            background: radial-gradient(circle, rgba(45,138,78,0.08) 0%, transparent 70%);
-            transition: opacity 0.5s;
-            opacity: 0;
-        }}
-        .feature-card:hover::before {{
-            opacity: 1;
         }}
         .feature-card:hover {{
-            transform: translateY(-12px) scale(1.02);
+            transform: translateY(-8px);
             border-color: {accent_color};
-            box-shadow: 0 20px 60px rgba(45,138,78,0.25);
+            box-shadow: 0 12px 40px rgba(45,138,78,0.2);
         }}
         .feature-card .icon {{
-            font-size: 3.5rem;
+            font-size: 3rem;
             margin-bottom: 0.5rem;
             display: block;
-            animation: pulse 2.5s infinite;
-        }}
-        @keyframes pulse {{
-            0%, 100% {{ transform: scale(1); }}
-            50% {{ transform: scale(1.08); }}
         }}
         .feature-card h3 {{
             color: {accent_color};
             margin-bottom: 0.3rem;
-            font-size: 1.2rem;
-            font-weight: 800;
+            font-size: 1.1rem;
+            font-weight: 700;
         }}
         .feature-card p {{
             color: {text_color};
@@ -987,106 +842,77 @@ def get_css():
             opacity: 0.8;
         }}
         
-        /* STATS */
+        /* Stats */
         .stat-box {{
             background: {card_bg};
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(8px);
             border: 1px solid {border_color};
-            border-radius: 16px;
-            padding: 1rem;
+            border-radius: 12px;
+            padding: 0.8rem;
             text-align: center;
-            transition: all 0.3s;
-        }}
-        .stat-box:hover {{
-            border-color: {accent_color};
-            transform: scale(1.03);
         }}
         .stat-number {{
-            font-size: 2.2rem;
-            font-weight: 800;
+            font-size: 2rem;
+            font-weight: 700;
             color: {accent_color};
         }}
         
-        /* AUTH CONTAINER */
+        /* Auth container */
         .auth-container {{
             max-width: 480px;
             margin: 0 auto;
             background: {card_bg};
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(16px);
             border: 1px solid {border_color};
-            border-radius: 28px;
+            border-radius: 24px;
             padding: 2rem;
             box-shadow: {shadow};
         }}
         
-        /* PROFILE PIC */
-        .profile-pic {{
-            font-size: 4.5rem;
-            text-align: center;
-        }}
-        
-        /* BUTTONS */
+        /* Buttons */
         .stButton > button {{
-            background: linear-gradient(135deg, #1a472a, #2d8a4e, #1a472a) !important;
-            background-size: 200% 200% !important;
-            animation: buttonShift 4s ease infinite !important;
+            background: linear-gradient(135deg, #1a472a, #2d8a4e) !important;
             color: white !important;
-            font-weight: 800 !important;
+            font-weight: 700 !important;
             border: none !important;
             border-radius: 50px !important;
-            padding: 0.8rem 2.5rem !important;
-            font-size: 1.05rem !important;
-            transition: all 0.3s ease !important;
+            padding: 0.7rem 2rem !important;
+            font-size: 1rem !important;
+            transition: all 0.3s !important;
             width: 100% !important;
-            box-shadow: 0 4px 25px rgba(45,138,78,0.35) !important;
-            letter-spacing: 0.5px !important;
-        }}
-        @keyframes buttonShift {{
-            0% {{ background-position: 0% 50%; }}
-            50% {{ background-position: 100% 50%; }}
-            100% {{ background-position: 0% 50%; }}
+            box-shadow: 0 4px 20px rgba(45,138,78,0.3) !important;
         }}
         .stButton > button:hover {{
-            transform: scale(1.04) !important;
-            box-shadow: 0 8px 45px rgba(45,138,78,0.5) !important;
+            transform: scale(1.02) !important;
+            box-shadow: 0 8px 30px rgba(45,138,78,0.4) !important;
         }}
         
-        /* WHATSAPP BUTTON */
+        /* WhatsApp */
         .whatsapp-btn {{
             background: #25D366 !important;
             color: white !important;
             border: none !important;
-            padding: 12px 24px !important;
-            border-radius: 14px !important;
-            font-size: 16px !important;
+            padding: 12px !important;
+            border-radius: 12px !important;
             font-weight: 700 !important;
-            cursor: pointer !important;
-            text-decoration: none !important;
-            display: inline-block !important;
-            margin: 8px 0 !important;
-            transition: all 0.3s !important;
-            width: 100% !important;
             text-align: center !important;
-        }}
-        .whatsapp-btn:hover {{
-            transform: scale(1.04) !important;
-            box-shadow: 0 4px 25px rgba(37,211,102,0.4) !important;
+            display: block !important;
+            margin: 8px 0 !important;
+            cursor: pointer;
+            text-decoration: none;
         }}
         
-        /* FEEDBACK BOX */
+        /* Feedback */
         .feedback-box {{
             background: {card_bg};
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(8px);
             border: 1px solid {border_color};
-            border-radius: 16px;
+            border-radius: 12px;
             padding: 1rem;
             margin: 0.5rem 0;
         }}
         
-        /* FOOTER */
+        /* Footer */
         .footer {{
             text-align: center;
             padding: 1.5rem;
@@ -1094,14 +920,12 @@ def get_css():
             border-top: 1px solid {border_color};
             margin-top: 2rem;
             background: {card_bg};
-            backdrop-filter: blur(10px);
-            -webkit-backdrop-filter: blur(10px);
-            border-radius: 16px;
+            backdrop-filter: blur(8px);
+            border-radius: 12px;
             font-size: 0.85rem;
-            letter-spacing: 0.3px;
         }}
         
-        /* BOTTOM NAV – MOBILE */
+        /* Bottom nav (mobile) */
         .bottom-nav {{
             display: none;
             position: fixed;
@@ -1109,8 +933,7 @@ def get_css():
             left: 0;
             width: 100%;
             background: {card_bg};
-            backdrop-filter: blur(20px);
-            -webkit-backdrop-filter: blur(20px);
+            backdrop-filter: blur(16px);
             border-top: 1px solid {border_color};
             padding: 0.5rem 0;
             z-index: 999;
@@ -1122,36 +945,18 @@ def get_css():
             color: {text_color};
             opacity: 0.6;
             cursor: pointer;
-            transition: opacity 0.2s;
             padding: 0.25rem 0.5rem;
             border: none;
             background: transparent;
-        }}
-        .bottom-nav .nav-item.active {{
-            opacity: 1;
-            color: {accent_color};
-            font-weight: 700;
         }}
         .bottom-nav .nav-item .icon {{
             font-size: 1.6rem;
             display: block;
         }}
-        
         @media (max-width: 768px) {{
             .bottom-nav {{ display: flex; }}
             .main-content {{ padding-bottom: 80px; }}
             .hero h1 {{ font-size: 2rem; }}
-            .hero p {{ font-size: 1rem; }}
-            .hero {{ padding: 1.5rem 1rem; }}
-            .feature-card {{ padding: 1.2rem 0.8rem; }}
-            .feature-card .icon {{ font-size: 2.5rem; }}
-            .plant-bg {{ font-size: 1.2rem; grid-template-columns: repeat(3, 1fr); }}
-            .stat-number {{ font-size: 1.5rem; }}
-        }}
-        @media (max-width: 480px) {{
-            .hero h1 {{ font-size: 1.5rem; }}
-            .hero p {{ font-size: 0.85rem; }}
-            .feature-card h3 {{ font-size: 1rem; }}
         }}
         
         @keyframes fadeInUp {{
@@ -1159,23 +964,17 @@ def get_css():
             to {{ opacity: 1; transform: translateY(0); }}
         }}
         .fade-in {{ animation: fadeInUp 0.6s ease-out; }}
-        
-        @keyframes slideDown {{
-            from {{ opacity: 0; transform: translateY(-20px); }}
-            to {{ opacity: 1; transform: translateY(0); }}
-        }}
-        .slide-down {{ animation: slideDown 0.4s ease-out; }}
+        .slide-down {{ animation: fadeInUp 0.4s ease-out; }}
     </style>
     """
 
 # ============================================
-# SIDEBAR NAVIGATION
+# NAVIGATION & BACK BUTTON
 # ============================================
 def navigation():
     with st.sidebar:
-        st.markdown(f"### 🌿 PlantPal")
+        st.markdown("### 🌿 PlantPal")
         st.markdown("---")
-        
         if st.session_state.logged_in:
             st.markdown(f"### 👋 Hello, {st.session_state.full_name or st.session_state.username}!")
             user_data = get_user_data(st.session_state.username)
@@ -1187,7 +986,6 @@ def navigation():
         if lang != st.session_state.language:
             st.session_state.language = lang
             st.rerun()
-        
         st.markdown("---")
         
         nav_items = {
@@ -1202,7 +1000,6 @@ def navigation():
             "❓ FAQ": "faq",
             "📖 About": "about"
         }
-        
         if st.session_state.logged_in:
             nav_items["👤 Profile"] = "profile"
             nav_items["🚪 Logout"] = "logout"
@@ -1224,10 +1021,8 @@ def navigation():
                     st.rerun()
         
         st.markdown("---")
-        
         with st.expander("⚙️ Settings"):
-            theme = st.selectbox("Theme", ["Light", "Dark"],
-                                 index=0 if st.session_state.theme=="light" else 1)
+            theme = st.selectbox("Theme", ["Light", "Dark"], index=0 if st.session_state.theme=="light" else 1)
             new_theme = "light" if theme=="Light" else "dark"
             if new_theme != st.session_state.theme:
                 st.session_state.theme = new_theme
@@ -1237,9 +1032,6 @@ def navigation():
                 st.session_state.brightness = brightness
                 st.rerun()
 
-# ============================================
-# BOTTOM NAVIGATION (MOBILE)
-# ============================================
 def bottom_nav():
     st.markdown("""
     <div class="bottom-nav">
@@ -1258,69 +1050,53 @@ def bottom_nav():
     </div>
     """, unsafe_allow_html=True)
 
-# ============================================
-# BACK BUTTON
-# ============================================
 def back_button():
     if st.button("← Back", key="back_btn"):
         st.session_state.page = st.session_state.previous_page
         st.rerun()
 
 # ============================================
-# HOME PAGE
+# PAGE FUNCTIONS (Home, Auth, Profile, etc.)
 # ============================================
+
 def home_page():
-    crop_emoji = ["🌿", "🌾", "🌱", "🌻", "🌽", "🍅", "🍠", "🥜"]
+    crop_emoji = ["🌿", "🌾", "🌱", "🌻", "🌽", "🍅", "🍠"]
     bg_html = '<div class="plant-bg">'
     for i in range(48):
         bg_html += f'<span>{crop_emoji[i % len(crop_emoji)]}</span>'
     bg_html += '</div>'
     st.markdown(bg_html, unsafe_allow_html=True)
-
     with st.container():
         st.markdown('<div class="main-content fade-in">', unsafe_allow_html=True)
-
-        st.markdown(f"""
+        st.markdown("""
         <div class="hero">
             <h1>🌿 <span class="highlight">PlantPal</span></h1>
             <p>🌍 Your Smart Farming Companion</p>
-            <div class="subtitle">
-                🌾 Identify plants · 🩺 Detect diseases · 💰 Market prices · 🌿 Weed control · 🧪 Fertilizer advice
-                <br>🌎 Available in 5+ languages – For smallholder farmers everywhere
-            </div>
-            <br>
+            <div class="subtitle">🌾 Identify plants · 🩺 Detect diseases · 💰 Market prices · 🌿 Weed control · 🧪 Fertilizer advice<br>🌎 Available in 5+ languages – For smallholder farmers everywhere</div>
         </div>
         """, unsafe_allow_html=True)
-
         col1, col2, col3 = st.columns([1,2,1])
         with col2:
             if st.session_state.logged_in:
                 if st.button("🌱 Start Identifying Plants", use_container_width=True, type="primary"):
-                    st.session_state.page = "identify"
-                    st.rerun()
+                    st.session_state.page = "identify"; st.rerun()
             else:
                 if st.button("🚀 Get Started – Free!", use_container_width=True, type="primary"):
-                    st.session_state.page = "auth"
-                    st.rerun()
-
+                    st.session_state.page = "auth"; st.rerun()
         st.markdown("---")
-
         st.markdown("""
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 0.8rem; margin: 1rem 0;">
-            <div class="stat-box"><div class="stat-number">50K+</div><div style="font-size:0.75rem;">Identified</div></div>
-            <div class="stat-box"><div class="stat-number">38</div><div style="font-size:0.75rem;">Diseases</div></div>
-            <div class="stat-box"><div class="stat-number">15+</div><div style="font-size:0.75rem;">Crops</div></div>
-            <div class="stat-box"><div class="stat-number">92%</div><div style="font-size:0.75rem;">Accuracy</div></div>
-            <div class="stat-box"><div class="stat-number">5</div><div style="font-size:0.75rem;">Languages</div></div>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(90px,1fr)); gap:0.8rem; margin:1rem 0;">
+            <div class="stat-box"><div class="stat-number">50K+</div><div>Identified</div></div>
+            <div class="stat-box"><div class="stat-number">38</div><div>Diseases</div></div>
+            <div class="stat-box"><div class="stat-number">15+</div><div>Crops</div></div>
+            <div class="stat-box"><div class="stat-number">92%</div><div>Accuracy</div></div>
+            <div class="stat-box"><div class="stat-number">5</div><div>Languages</div></div>
         </div>
         """, unsafe_allow_html=True)
-
         st.markdown("---")
         st.markdown("## 🌟 Explore PlantPal")
         st.markdown("Click on any card to try it out – no login required for the first 3 identifications!")
-
         col1, col2, col3 = st.columns(3)
-        
         features = [
             ("🌱", "Identify Plant", "Snap a photo and get the name, care tips, and market price.", "identify"),
             ("🌾", "Nigerian Crops", "Learn about Cassava, Rice, Yam, Tomato, Pepper, Maize and more.", "learn"),
@@ -1329,61 +1105,28 @@ def home_page():
             ("📱", "Share via WhatsApp", "Share plant info with other farmers instantly.", "#"),
             ("🌍", "5+ Languages", "Use PlantPal in English, Yorùbá, Hausa, Igbo, Pidgin, Swahili.", "about")
         ]
-        
         for i, (icon, title, desc, page) in enumerate(features):
-            with col1 if i % 3 == 0 else col2 if i % 3 == 1 else col3:
+            with col1 if i%3==0 else col2 if i%3==1 else col3:
                 if st.button(f"{icon} **{title}**\n\n{desc}", key=f"feature_{i}"):
-                    if page != "#":
-                        st.session_state.page = page
-                        st.rerun()
-                    else:
-                        st.info("📱 WhatsApp sharing is available after plant identification.")
-
+                    if page != "#": st.session_state.page = page; st.rerun()
+                    else: st.info("📱 WhatsApp sharing is available after plant identification.")
         st.markdown("---")
         st.markdown("## 📋 How It Works")
         col1, col2, col3 = st.columns(3)
-        with col1:
-            st.markdown("""
-            <div style="text-align:center;padding:0.5rem;">
-                <div style="font-size:2.8rem;">📸</div>
-                <h4>1. Take a Photo</h4>
-                <p style="color:#666;font-size:0.9rem;">Of any plant or leaf</p>
-            </div>
-            """, unsafe_allow_html=True)
-        with col2:
-            st.markdown("""
-            <div style="text-align:center;padding:0.5rem;">
-                <div style="font-size:2.8rem;">☁️</div>
-                <h4>2. Upload & Analyze</h4>
-                <p style="color:#666;font-size:0.9rem;">AI identifies instantly</p>
-            </div>
-            """, unsafe_allow_html=True)
-        with col3:
-            st.markdown("""
-            <div style="text-align:center;padding:0.5rem;">
-                <div style="font-size:2.8rem;">🌿</div>
-                <h4>3. Get Results</h4>
-                <p style="color:#666;font-size:0.9rem;">Name, care, prices, and more</p>
-            </div>
-            """, unsafe_allow_html=True)
-
+        with col1: st.markdown("<div style='text-align:center;'><div style='font-size:2.8rem;'>📸</div><h4>1. Take a Photo</h4><p style='color:#666;'>Of any plant or leaf</p></div>", unsafe_allow_html=True)
+        with col2: st.markdown("<div style='text-align:center;'><div style='font-size:2.8rem;'>☁️</div><h4>2. Upload & Analyze</h4><p style='color:#666;'>AI identifies instantly</p></div>", unsafe_allow_html=True)
+        with col3: st.markdown("<div style='text-align:center;'><div style='font-size:2.8rem;'>🌿</div><h4>3. Get Results</h4><p style='color:#666;'>Name, care, prices, and more</p></div>", unsafe_allow_html=True)
         st.markdown('</div>', unsafe_allow_html=True)
 
-# ============================================
-# AUTH PAGE – FIXED SIGN-UP
-# ============================================
 def auth_page():
     back_button()
     st.markdown('<div class="main-content slide-down">', unsafe_allow_html=True)
     st.markdown('<div class="auth-container">', unsafe_allow_html=True)
-    
     tab1, tab2 = st.tabs(["🔐 Login", "📝 Sign Up"])
-
     with tab1:
         st.markdown("<h2 style='text-align:center;'>Welcome Back</h2>", unsafe_allow_html=True)
         username = st.text_input("Username or Email", placeholder="Enter your username or email", key="login_user")
         password = st.text_input("Password", type="password", placeholder="Enter your password", key="login_pass")
-        
         if st.button("🔓 Login", use_container_width=True, type="primary"):
             if username and password:
                 success, msg = login_user(username, password)
@@ -1396,38 +1139,29 @@ def auth_page():
                         st.session_state.user_email = user_data.get('email', '')
                     st.success(msg)
                     time.sleep(0.5)
-                    st.session_state.page = "home"
-                    st.rerun()
+                    st.session_state.page = "home"; st.rerun()
                 else:
                     st.error(msg)
             else:
                 st.error("Please fill in all fields")
-        
         st.markdown("---")
         st.markdown("**🔑 Demo:** farmer_john / farm2024")
-
     with tab2:
         st.markdown("<h2 style='text-align:center;'>Create Account</h2>", unsafe_allow_html=True)
         st.markdown("<p style='text-align:center;color:#666;'>Join the farming community</p>", unsafe_allow_html=True)
-        
-        # CRITICAL FIX: All fields inside the form must be captured properly
         with st.form(key="signup_form"):
             full_name = st.text_input("Full Name", placeholder="e.g., Adebayo Ogunlesi", key="signup_full_name")
             username = st.text_input("Username", placeholder="Choose a unique username", key="signup_user")
             email = st.text_input("Email Address", placeholder="your@email.com", key="signup_email")
             password = st.text_input("Password", type="password", placeholder="Min 6 characters", key="signup_pass")
             confirm_password = st.text_input("Confirm Password", type="password", placeholder="Re-enter password", key="signup_confirm")
-            
             st.markdown("---")
             st.markdown("### 📧 Email Verification")
             st.markdown("A code will be shown for you to verify.")
-            
             submitted = st.form_submit_button("📝 Sign Up", use_container_width=True, type="primary")
-            
             if submitted:
-                # Validation
                 if not full_name or not username or not email or not password:
-                    st.error("❌ All fields are required. Please fill in everything.")
+                    st.error("❌ All fields are required.")
                 elif len(password) < 6:
                     st.error("❌ Password must be at least 6 characters")
                 elif password != confirm_password:
@@ -1441,150 +1175,93 @@ def auth_page():
                     if success:
                         st.success(msg)
                         st.session_state.show_otp = True
-                        
-                        # Show OTP verification
-                        otp_code = st.text_input("Enter 6-digit OTP", placeholder="e.g., 123456", key="otp_input")
-                        if st.button("✅ Verify Email", use_container_width=True):
-                            if otp_code:
-                                verified, verify_msg = verify_otp(email, otp_code)
-                                if verified:
-                                    st.success(verify_msg)
-                                    st.balloons()
-                                    st.info("👤 Please complete your profile!")
-                                    time.sleep(1)
-                                    st.session_state.page = "profile"
-                                    st.rerun()
-                                else:
-                                    st.error(verify_msg)
-                            else:
-                                st.error("Please enter the OTP code")
+        # OTP verification outside the form to avoid button error
+        if st.session_state.show_otp and st.session_state.registration_successful:
+            otp_code = st.text_input("Enter 6-digit OTP", placeholder="e.g., 123456", key="otp_input")
+            if st.button("✅ Verify Email", use_container_width=True):
+                if otp_code:
+                    verified, verify_msg = verify_otp(st.session_state.pending_email, otp_code)
+                    if verified:
+                        st.success(verify_msg)
+                        st.balloons()
+                        st.info("👤 Please complete your profile!")
+                        time.sleep(1)
+                        st.session_state.page = "profile"; st.rerun()
                     else:
-                        st.error(msg)
-    
+                        st.error(verify_msg)
+                else:
+                    st.error("Please enter the OTP code")
     st.markdown('</div></div>', unsafe_allow_html=True)
 
-# ============================================
-# PROFILE PAGE
-# ============================================
 def profile_page():
     back_button()
     user_data = get_user_data(st.session_state.username)
-    if not user_data:
-        st.error("User data not found")
-        return
-    
+    if not user_data: st.error("User data not found"); return
     st.markdown('<div class="main-content slide-down">', unsafe_allow_html=True)
     st.markdown("## 👤 Your Profile")
-    
     needs_completion = not user_data.get("nationality") or not user_data.get("bio")
-    if needs_completion:
-        st.info("📝 Please complete your profile to personalize your experience.")
-    
+    if needs_completion: st.info("📝 Please complete your profile to personalize your experience.")
     col1, col2 = st.columns([1,2])
     with col1:
         profile_pic = user_data.get("profile_pic", "👨‍🌾")
-        st.markdown(f"""
-        <div class="profile-pic">{profile_pic}</div>
-        <div style="text-align:center;">
-            <h3>{user_data.get('full_name', st.session_state.username)}</h3>
-            <p style="color:#666;">@{st.session_state.username}</p>
-        </div>
-        """, unsafe_allow_html=True)
-        
-        pic_options = ["👨‍🌾", "👩‍🌾", "🌾", "🌿", "🌱", "🌳", "🌻", "🍅", "🌽", "🍠", "🥬", "🌶️"]
-        new_pic = st.selectbox("Profile Emoji", pic_options, 
-                               index=pic_options.index(profile_pic) if profile_pic in pic_options else 0)
+        st.markdown(f"<div style='font-size:4rem;text-align:center;'>{profile_pic}</div><div style='text-align:center;'><h3>{user_data.get('full_name', st.session_state.username)}</h3><p style='color:#666;'>@{st.session_state.username}</p></div>", unsafe_allow_html=True)
+        pic_options = ["👨‍🌾","👩‍🌾","🌾","🌿","🌱","🌳","🌻","🍅","🌽","🍠","🥬","🌶️"]
+        new_pic = st.selectbox("Profile Emoji", pic_options, index=pic_options.index(profile_pic) if profile_pic in pic_options else 0)
         if new_pic != profile_pic:
-            if update_user_profile(st.session_state.username, user_data.get('full_name',''),
-                                  user_data.get('nationality',''), user_data.get('bio',''), new_pic):
-                st.success("✅ Updated")
-                st.rerun()
-    
+            if update_user_profile(st.session_state.username, user_data.get('full_name',''), user_data.get('nationality',''), user_data.get('bio',''), new_pic):
+                st.success("✅ Updated"); st.rerun()
     with col2:
         st.markdown("### 📋 Personal Info")
         full_name = st.text_input("Full Name", value=user_data.get('full_name', ''))
-        nationalities = ["Nigeria", "Ghana", "Kenya", "South Africa", "Uganda", "Tanzania", 
-                         "Other African", "Other International"]
-        curr_nat = user_data.get('nationality', '')
-        nationality = st.selectbox("Nationality", nationalities, 
-                                   index=nationalities.index(curr_nat) if curr_nat in nationalities else 0)
+        nationalities = ["Nigeria","Ghana","Kenya","South Africa","Uganda","Tanzania","Other African","Other International"]
+        curr_nat = user_data.get('nationality','')
+        nationality = st.selectbox("Nationality", nationalities, index=nationalities.index(curr_nat) if curr_nat in nationalities else 0)
         bio = st.text_area("About You", value=user_data.get('bio',''), placeholder="Tell us about your farm.")
         st.text_input("Email", value=user_data.get('email',''), disabled=True)
         st.text_input("Joined", value=user_data.get('joined','')[:10], disabled=True)
-        
         if st.button("💾 Save Profile", type="primary"):
             if update_user_profile(st.session_state.username, full_name, nationality, bio, new_pic):
-                st.success("✅ Profile updated!")
-                st.session_state.full_name = full_name
-                st.balloons()
-                st.rerun()
-        
+                st.success("✅ Profile updated!"); st.session_state.full_name = full_name; st.balloons(); st.rerun()
         st.markdown("---")
         st.markdown("### 📊 Your Plant Journey")
-        plants = user_data.get('plants_identified', 0)
-        history = user_data.get('history', [])
+        plants = user_data.get('plants_identified', 0); history = user_data.get('history', [])
         col1, col2 = st.columns(2)
-        with col1:
-            st.markdown(f"""
-            <div class="stat-box"><div class="stat-number">{plants}</div><div style="font-size:0.8rem;">Plants</div></div>
-            """, unsafe_allow_html=True)
-        with col2:
-            st.markdown(f"""
-            <div class="stat-box"><div class="stat-number">{len(history)}</div><div style="font-size:0.8rem;">Entries</div></div>
-            """, unsafe_allow_html=True)
+        with col1: st.markdown(f"<div class='stat-box'><div class='stat-number'>{plants}</div><div>Plants</div></div>", unsafe_allow_html=True)
+        with col2: st.markdown(f"<div class='stat-box'><div class='stat-number'>{len(history)}</div><div>Entries</div></div>", unsafe_allow_html=True)
         if history:
             st.markdown("#### Recent")
             for item in history[-5:]:
                 st.markdown(f"- **{item['plant']}** - {item['date'][:10]}")
-        if user_data.get("verified", False):
-            st.success("✅ Email Verified")
-        else:
-            st.warning("⚠️ Email not verified")
-    
+        if user_data.get("verified", False): st.success("✅ Email Verified")
+        else: st.warning("⚠️ Email not verified")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ============================================
-# IDENTIFY PAGE
-# ============================================
 def identify_page():
     back_button()
     st.markdown('<div class="main-content slide-down">', unsafe_allow_html=True)
     st.markdown("## 🌱 Identify a Plant")
     st.markdown("Upload a photo and get plant name, care tips, and market prices")
-
     if not st.session_state.logged_in and st.session_state.free_identifications >= 3:
         st.warning("🌱 You've used your 3 free identifications. Create a free account to continue!")
         st.info(get_text("register_prompt"))
         if st.button("🔐 Create Account", type="primary"):
-            st.session_state.page = "auth"
-            st.rerun()
-        st.markdown('</div>', unsafe_allow_html=True)
-        return
-
+            st.session_state.page = "auth"; st.rerun()
+        st.markdown('</div>', unsafe_allow_html=True); return
     uploaded = st.file_uploader("Upload Plant Photo", type=["jpg","jpeg","png"])
     city = st.text_input("Your City", placeholder="e.g., Lagos, Nairobi, Accra")
-    
     if uploaded and city:
-        image = Image.open(uploaded)
-        st.image(image, caption="Your Plant", use_container_width=True)
+        image = Image.open(uploaded); st.image(image, caption="Your Plant", use_container_width=True)
         if st.button("🌿 Identify", type="primary"):
             with st.spinner("Analyzing..."):
                 if plant_model:
                     try:
-                        preds = plant_model(image)
-                        top = preds[0]
-                        plant_name = top['label']
-                        conf = top['score']
-                        
+                        preds = plant_model(image); top = preds[0]; plant_name = top['label']; conf = top['score']
                         crop, info = get_crop_info(plant_name)
                         weather = get_weather(city)
                         advice = generate_advice(plant_name, weather)
                         toxicity = check_toxicity(plant_name)
-                        
                         st.success("✅ Identification Complete!")
-                        st.markdown("---")
-                        st.markdown(advice)
-                        
+                        st.markdown("---"); st.markdown(advice)
                         if crop:
                             st.markdown("---")
                             st.markdown(f"## 🇳🇬 {crop.capitalize()}")
@@ -1595,38 +1272,24 @@ def identify_page():
                             st.markdown(f"**Diseases:** {', '.join(info['diseases'])}")
                             st.markdown(f"**Uses:** {info['uses']}")
                             st.markdown(f"**Soil:** {info['soil']}")
-                            
                             share_text = f"🌿 PlantPal ID: {crop.capitalize()}\nLocal: {info['local_name']}\nSeason: {info['season']}\nPrice: {info['price']}"
                             share_url = whatsapp_share(share_text)
                             st.markdown(f'<a href="{share_url}" target="_blank"><button class="whatsapp-btn">📱 Share on WhatsApp</button></a>', unsafe_allow_html=True)
                         else:
-                            st.markdown("---")
-                            st.markdown("💡 Not a common crop? We're constantly adding more!")
-                        
+                            st.markdown("---"); st.markdown("💡 Not a common crop? We're constantly adding more!")
                         st.markdown(f"**🔬 Confidence:** {conf:.2%}")
-                        st.markdown("---")
-                        st.markdown("### ☠️ Safety")
-                        st.markdown(toxicity)
-                        
+                        st.markdown("---"); st.markdown("### ☠️ Safety"); st.markdown(toxicity)
                         if st.session_state.logged_in:
-                            update_user_history(st.session_state.username, plant_name)
-                            st.success("✅ Saved to your history!")
+                            update_user_history(st.session_state.username, plant_name); st.success("✅ Saved to your history!")
                         else:
                             st.session_state.free_identifications += 1
                             remaining = 3 - st.session_state.free_identifications
-                            if remaining > 0:
-                                st.info(f"📊 You have {remaining} free identification(s) remaining.")
-                            else:
-                                st.warning("🌱 You've used all free identifications. Create an account to continue!")
-                    except Exception as e:
-                        st.error(f"Error: {e}")
-                else:
-                    st.error("Model not available. Please try again later.")
+                            if remaining > 0: st.info(f"📊 You have {remaining} free identification(s) remaining.")
+                            else: st.warning("🌱 You've used all free identifications. Create an account to continue!")
+                    except Exception as e: st.error(f"Error: {e}")
+                else: st.error("Model not available. Please try again later.")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ============================================
-# DISEASE PAGE
-# ============================================
 def disease_page():
     back_button()
     st.markdown('<div class="main-content slide-down">', unsafe_allow_html=True)
@@ -1648,16 +1311,9 @@ def disease_page():
                 }
                 disease = random.choice(list(diseases.keys()))
                 treatment = diseases[disease]
-                st.markdown(f"""
-                **🩺 Disease Detected:** {disease}
-                **🔬 Treatment:** {treatment}
-                **🔬 Confidence:** {random.randint(75,95)}%
-                """)
+                st.markdown(f"**🩺 Disease Detected:** {disease}\n\n**🔬 Treatment:** {treatment}\n\n**🔬 Confidence:** {random.randint(75,95)}%")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ============================================
-# VIDEO PAGE
-# ============================================
 def video_page():
     back_button()
     st.markdown('<div class="main-content slide-down">', unsafe_allow_html=True)
@@ -1670,9 +1326,6 @@ def video_page():
                 st.markdown("**🌿 Plant:** Cassava (78% confidence)")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ============================================
-# WEEDS PAGE
-# ============================================
 def weeds_page():
     back_button()
     st.markdown('<div class="main-content slide-down">', unsafe_allow_html=True)
@@ -1686,9 +1339,6 @@ def weeds_page():
             st.markdown(f"**📅 Season:** {info['season']}")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ============================================
-# FERTILIZERS PAGE
-# ============================================
 def fertilizers_page():
     back_button()
     st.markdown('<div class="main-content slide-down">', unsafe_allow_html=True)
@@ -1702,15 +1352,11 @@ def fertilizers_page():
             st.markdown(f"**Local Options:** {info['local_options']}")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ============================================
-# LEARNING & AI PAGE
-# ============================================
 def learning_page():
     back_button()
     st.markdown('<div class="main-content slide-down">', unsafe_allow_html=True)
     st.markdown("## 📚 Learning Center & AI Assistant")
     tabs = st.tabs(["🌾 Crops", "🌱 Care", "🩺 Disease", "📱 How", "🤖 Ask AI"])
-    
     with tabs[0]:
         for crop, info in CROP_DATABASE.items():
             with st.expander(f"{info['emoji']} {crop.capitalize()}"):
@@ -1721,36 +1367,13 @@ def learning_page():
                 st.markdown(f"**Diseases:** {', '.join(info['diseases'])}")
                 st.markdown(f"**Uses:** {info['uses']}")
     with tabs[1]:
-        st.markdown("### Plant Care Basics")
-        st.markdown("""
-        **💧 Watering:** Morning/evening, avoid overwatering.
-        **☀️ Sunlight:** 4-6 hours daily.
-        **🌱 Soil:** Add compost, test pH regularly.
-        **🧪 Fertilizer:** Use organic options when possible.
-        """)
+        st.markdown("### Plant Care Basics\n\n💧 **Watering:** Morning/evening, avoid overwatering.\n☀️ **Sunlight:** 4-6 hours daily.\n🌱 **Soil:** Add compost, test pH regularly.\n🧪 **Fertilizer:** Use organic options when possible.")
     with tabs[2]:
-        st.markdown("### Disease Prevention")
-        st.markdown("""
-        1. Use resistant varieties.
-        2. Space plants properly.
-        3. Avoid overhead watering.
-        4. Remove infected plants immediately.
-        5. Monitor daily.
-        6. Practice crop rotation.
-        """)
+        st.markdown("### Disease Prevention\n\n1. Use resistant varieties.\n2. Space plants properly.\n3. Avoid overhead watering.\n4. Remove infected plants immediately.\n5. Monitor daily.\n6. Practice crop rotation.")
     with tabs[3]:
-        st.markdown("### How to Use PlantPal")
-        st.markdown("""
-        1. **Take a photo** of the plant or leaf.
-        2. **Upload** to PlantPal.
-        3. **Enter your city** for weather advice.
-        4. **Get results** – name, care, prices.
-        5. **Share** via WhatsApp.
-        6. **Save** your history (create account).
-        """)
+        st.markdown("### How to Use PlantPal\n\n1. **Take a photo** of the plant or leaf.\n2. **Upload** to PlantPal.\n3. **Enter your city** for weather advice.\n4. **Get results** – name, care, prices.\n5. **Share** via WhatsApp.\n6. **Save** your history (create account).")
     with tabs[4]:
-        st.markdown("### 🤖 Ask PlantPal AI")
-        st.markdown("Ask any farming question – I'm your companion!")
+        st.markdown("### 🤖 Ask PlantPal AI\n\nAsk any farming question – I'm your companion!")
         user_q = st.text_input("Your question:", placeholder="e.g., Why are my tomato leaves turning yellow?")
         if user_q:
             with st.spinner("Thinking..."):
@@ -1759,20 +1382,9 @@ def learning_page():
                 st.markdown("### 🤖 AI Response")
                 st.markdown(response)
         st.markdown("---")
-        st.markdown("### 💡 Try These Questions")
-        st.markdown("""
-        - "My cassava leaves are yellowing"
-        - "How to control weeds in maize?"
-        - "Best fertilizer for rice?"
-        - "When to harvest yam?"
-        - "What are common plant diseases?"
-        - "My soil is dry and cracked, what should I do?"
-        """)
+        st.markdown("### 💡 Try These Questions\n\n- 'My cassava leaves are yellowing'\n- 'How to control weeds in maize?'\n- 'Best fertilizer for rice?'\n- 'When to harvest yam?'\n- 'What are common plant diseases?'")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ============================================
-# FEEDBACK PAGE
-# ============================================
 def feedback_page():
     back_button()
     st.markdown('<div class="main-content slide-down">', unsafe_allow_html=True)
@@ -1795,20 +1407,11 @@ def feedback_page():
     if feedbacks:
         for fb in feedbacks:
             stars = "⭐" * int(fb[1])
-            st.markdown(f"""
-            <div class="feedback-box">
-                <strong>{fb[0]}</strong> {stars}
-                <p>{fb[2] or 'No comment'}</p>
-                <p style="color:#888;font-size:0.7rem;">{fb[3][:10]} - {fb[4]}</p>
-            </div>
-            """, unsafe_allow_html=True)
+            st.markdown(f"<div class='feedback-box'><strong>{fb[0]}</strong> {stars}<p>{fb[2] or 'No comment'}</p><p style='color:#888;font-size:0.7rem;'>{fb[3][:10]} - {fb[4]}</p></div>", unsafe_allow_html=True)
     else:
         st.info("No feedback yet. Be the first!")
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ============================================
-# FAQ PAGE
-# ============================================
 def faq_page():
     back_button()
     st.markdown('<div class="main-content slide-down">', unsafe_allow_html=True)
@@ -1832,9 +1435,6 @@ def faq_page():
             st.markdown(a)
     st.markdown('</div>', unsafe_allow_html=True)
 
-# ============================================
-# ABOUT PAGE
-# ============================================
 def about_page():
     back_button()
     st.markdown('<div class="main-content slide-down">', unsafe_allow_html=True)
@@ -1893,54 +1493,34 @@ def about_page():
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ============================================
-# MAIN APP
+# MAIN
 # ============================================
 def main():
     st.markdown(get_css(), unsafe_allow_html=True)
     navigation()
     bottom_nav()
-    
     if st.session_state.logged_in and st.session_state.page != "profile":
         user_data = get_user_data(st.session_state.username)
         if user_data and (not user_data.get('nationality') or not user_data.get('bio')):
             if st.session_state.page not in ["profile", "auth", "home"]:
                 st.info("👤 Please complete your profile for a better experience.")
                 if st.button("Go to Profile"):
-                    st.session_state.page = "profile"
-                    st.rerun()
-    
-    if st.session_state.page == "home":
-        home_page()
-    elif st.session_state.page == "auth":
-        auth_page()
+                    st.session_state.page = "profile"; st.rerun()
+    if st.session_state.page == "home": home_page()
+    elif st.session_state.page == "auth": auth_page()
     elif st.session_state.page == "profile":
-        if st.session_state.logged_in:
-            profile_page()
-        else:
-            st.warning("Please login to view your profile")
-            st.session_state.page = "auth"
-            st.rerun()
-    elif st.session_state.page == "identify":
-        identify_page()
-    elif st.session_state.page == "disease":
-        disease_page()
-    elif st.session_state.page == "video":
-        video_page()
-    elif st.session_state.page == "weeds":
-        weeds_page()
-    elif st.session_state.page == "fertilizers":
-        fertilizers_page()
-    elif st.session_state.page == "learn":
-        learning_page()
-    elif st.session_state.page == "feedback":
-        feedback_page()
-    elif st.session_state.page == "faq":
-        faq_page()
-    elif st.session_state.page == "about":
-        about_page()
-    else:
-        home_page()
-    
+        if st.session_state.logged_in: profile_page()
+        else: st.warning("Please login"); st.session_state.page = "auth"; st.rerun()
+    elif st.session_state.page == "identify": identify_page()
+    elif st.session_state.page == "disease": disease_page()
+    elif st.session_state.page == "video": video_page()
+    elif st.session_state.page == "weeds": weeds_page()
+    elif st.session_state.page == "fertilizers": fertilizers_page()
+    elif st.session_state.page == "learn": learning_page()
+    elif st.session_state.page == "feedback": feedback_page()
+    elif st.session_state.page == "faq": faq_page()
+    elif st.session_state.page == "about": about_page()
+    else: home_page()
     st.markdown("""
     <div class="footer">
         <p>🌍 PlantPal – Your Smart Farming Companion</p>
