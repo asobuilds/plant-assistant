@@ -39,16 +39,12 @@ if "brightness" not in st.session_state:
     st.session_state.brightness = 100
 if "language" not in st.session_state:
     st.session_state.language = "English"
-if "sidebar_open" not in st.session_state:
-    st.session_state.sidebar_open = False
 if "otp" not in st.session_state:
     st.session_state.otp = None
 if "otp_verified" not in st.session_state:
     st.session_state.otp_verified = False
 if "profile_complete" not in st.session_state:
     st.session_state.profile_complete = False
-if "show_login_required" not in st.session_state:
-    st.session_state.show_login_required = False
 if "previous_page" not in st.session_state:
     st.session_state.previous_page = "home"
 if "pending_username" not in st.session_state:
@@ -63,9 +59,11 @@ if "free_identifications" not in st.session_state:
     st.session_state.free_identifications = 0
 if "show_otp" not in st.session_state:
     st.session_state.show_otp = False
+if "signup_success" not in st.session_state:
+    st.session_state.signup_success = False
 
 # ============================================
-# LANGUAGE SUPPORT (Universal + Local)
+# LANGUAGE SUPPORT
 # ============================================
 LANGUAGES = {
     "English": "en",
@@ -97,9 +95,6 @@ TRANSLATIONS = {
         "dark": "Dark",
         "home": "Home",
         "back": "← Back",
-        "verify_email": "Verify Email",
-        "send_otp": "Send OTP",
-        "enter_otp": "Enter OTP",
         "feedback": "Feedback",
         "weeds": "Weeds & Pesticides",
         "fertilizers": "Fertilizers",
@@ -127,9 +122,6 @@ TRANSLATIONS = {
         "dark": "Giza",
         "home": "Nyumbani",
         "back": "← Rudi",
-        "verify_email": "Thibitisha Barua Pepe",
-        "send_otp": "Tuma OTP",
-        "enter_otp": "Weka OTP",
         "feedback": "Maoni",
         "weeds": "Magugu na Dawa",
         "fertilizers": "Mboji",
@@ -137,7 +129,6 @@ TRANSLATIONS = {
         "free_limit": "Umetumia {count} za bure. Jisajili ili kupata ukomo!",
         "register_prompt": "🌱 Fungua ukomo wa kutambua mimea, hifadhi historia, na upate ushauri wa kibinafsi. Ni bure!"
     }
-    # Other languages similar structure...
 }
 
 def get_text(key):
@@ -145,7 +136,7 @@ def get_text(key):
     return TRANSLATIONS.get(lang_code, {}).get(key, key)
 
 # ============================================
-# DATABASE LAYER (PostgreSQL + JSON Fallback)
+# DATABASE LAYER
 # ============================================
 USER_DB_FILE = "users.json"
 
@@ -294,7 +285,6 @@ def register_user(username, full_name, email, password):
     if any(u.get("email") == email for u in users.values()):
         return False, "Email already registered"
     
-    # Generate OTP
     otp = str(random.randint(100000, 999999))
     st.session_state.otp = otp
     st.session_state.otp_verified = False
@@ -304,7 +294,6 @@ def register_user(username, full_name, email, password):
     st.session_state.pending_password = password
     st.session_state.show_otp = True
     
-    # Show OTP in app (since email isn't configured yet)
     return True, f"✅ OTP generated: **{otp}** (Copy this code) - Enter it below to verify."
 
 def verify_otp(email, entered_otp):
@@ -331,7 +320,7 @@ def verify_otp(email, entered_otp):
             st.session_state.user_email = email
             st.session_state.full_name = st.session_state.pending_full_name
             st.session_state.profile_complete = False
-            st.session_state.free_identifications = 0  # reset for logged in user
+            st.session_state.free_identifications = 0
             return True, "Email verified! Welcome to PlantPal!"
         else:
             return False, "Account creation failed."
@@ -406,14 +395,14 @@ def get_feedback(limit=20):
     return []
 
 # ============================================
-# COMPREHENSIVE CROP DATABASE (Local & Universal)
+# CROP DATABASE
 # ============================================
 CROP_DATABASE = {
     "cassava": {
         "local_name": "Akpu/Kpo/Rogo (Nigeria), Mhogo (Swahili)",
-        "season": "Varies by region, typically rainy season",
+        "season": "Rainy season",
         "harvest": "9-12 months",
-        "price": "₦50,000-80,000/ton (Nigeria), $100-200/ton",
+        "price": "₦50,000-80,000/ton",
         "diseases": ["Cassava Mosaic Disease", "Cassava Brown Streak", "Anthracnose"],
         "uses": "Food, starch, animal feed, ethanol",
         "soil": "Well-drained sandy loam, pH 5.5-6.5",
@@ -426,7 +415,7 @@ CROP_DATABASE = {
         "local_name": "Shinkafa/Osikapa (Nigeria), Mchele (Swahili)",
         "season": "Rainy season",
         "harvest": "4-5 months",
-        "price": "₦80,000-120,000/ton, $300-500/ton",
+        "price": "₦80,000-120,000/ton",
         "diseases": ["Rice Blast", "Sheath Blight", "Bacterial Leaf Blight"],
         "uses": "Food, brewing, animal feed",
         "soil": "Clay or loamy, pH 5.5-6.5",
@@ -483,7 +472,7 @@ CROP_DATABASE = {
         "uses": "Food, sauces",
         "soil": "Well-drained loamy, pH 6.0-6.8",
         "water": "Moderate (500-800mm)",
-        "storage": "Store at room temperature, not in fridge",
+        "storage": "Store at room temperature",
         "emoji": "🍅",
         "region": "Global"
     },
@@ -538,32 +527,6 @@ CROP_DATABASE = {
         "storage": "Dry to 10-12% moisture",
         "emoji": "🫘",
         "region": "Global"
-    },
-    "plantain": {
-        "local_name": "Ogede/Ayaba (Nigeria), Ndizi (Swahili)",
-        "season": "All year",
-        "harvest": "9-12 months after planting",
-        "price": "₦100,000-150,000/ton",
-        "diseases": ["Black Sigatoka", "Panama Disease", "Mosaic Virus"],
-        "uses": "Food, flour, chips",
-        "soil": "Well-drained loamy, pH 5.5-6.5",
-        "water": "High (1500-2000mm)",
-        "storage": "Store in cool, dry place",
-        "emoji": "🍌",
-        "region": "Global"
-    },
-    "okra": {
-        "local_name": "Ila/Iro (Nigeria), Bamia (Swahili)",
-        "season": "Rainy season",
-        "harvest": "2-3 months",
-        "price": "₦50,000-80,000/ton",
-        "diseases": ["Okra Mosaic", "Powdery Mildew", "Bacterial Wilt"],
-        "uses": "Food, soups",
-        "soil": "Well-drained loamy, pH 6.0-6.8",
-        "water": "Moderate (500-800mm)",
-        "storage": "Refrigerate for 2-3 days",
-        "emoji": "🥬",
-        "region": "Global"
     }
 }
 
@@ -574,62 +537,36 @@ def get_crop_info(plant_name):
             return crop, info
     return None, None
 
-def get_all_crops():
-    return list(CROP_DATABASE.keys())
-
 # ============================================
-# WEED DATABASE (Universal)
+# WEED DATABASE
 # ============================================
 WEED_DATABASE = {
     "spear_grass": {
         "name": "Spear Grass (Imperata cylindrica)",
-        "description": "Persistent grass with deep rhizomes, common in fallow lands.",
-        "control_organic": "Deep plowing, mulching, repeated cutting, cover crops",
-        "control_chemical": "Glyphosate or Paraquat at early growth",
-        "prevention": "Regular monitoring, crop rotation, dense canopy",
-        "season": "All year, active in rainy season",
-        "emoji": "🌾",
-        "region": "Global"
+        "description": "Persistent grass with deep rhizomes.",
+        "control_organic": "Deep plowing, mulching, repeated cutting",
+        "control_chemical": "Glyphosate or Paraquat",
+        "prevention": "Regular monitoring, crop rotation",
+        "season": "All year",
+        "emoji": "🌾"
     },
     "goat_weed": {
         "name": "Goat Weed (Ageratum conyzoides)",
-        "description": "Annual herb, spreads rapidly in disturbed soil.",
-        "control_organic": "Hand pulling, heavy mulching, intercropping",
-        "control_chemical": "2,4-D or Atrazine pre-emergence",
-        "prevention": "Maintain soil cover, proper spacing",
+        "description": "Annual herb, spreads rapidly.",
+        "control_organic": "Hand pulling, heavy mulching",
+        "control_chemical": "2,4-D or Atrazine",
+        "prevention": "Maintain soil cover",
         "season": "Rainy season",
-        "emoji": "🌿",
-        "region": "Global"
+        "emoji": "🌿"
     },
     "mimosa": {
         "name": "Mimosa (Mimosa pudica)",
-        "description": "Spreading herb with thorns, covers ground rapidly.",
-        "control_organic": "Manual pulling before seed set, heavy mulching",
-        "control_chemical": "Glyphosate or Dicamba at early growth",
-        "prevention": "Avoid seed spread, regular weeding",
+        "description": "Spreading herb with thorns.",
+        "control_organic": "Manual pulling before seed set",
+        "control_chemical": "Glyphosate or Dicamba",
+        "prevention": "Avoid seed spread",
         "season": "Rainy season",
-        "emoji": "🌱",
-        "region": "Global"
-    },
-    "bermuda_grass": {
-        "name": "Bermuda Grass (Cynodon dactylon)",
-        "description": "Aggressive perennial grass, spreads by rhizomes.",
-        "control_organic": "Deep digging, removal of rhizomes, solarization",
-        "control_chemical": "Glyphosate or Fusilade",
-        "prevention": "Mulching, proper land preparation",
-        "season": "All year",
-        "emoji": "🌾",
-        "region": "Global"
-    },
-    "pigweed": {
-        "name": "Pigweed (Amaranthus spinosus)",
-        "description": "Annual weed with spines, seeds spread widely.",
-        "control_organic": "Hand pulling before seed set, mulching",
-        "control_chemical": "Atrazine or 2,4-D pre-emergence",
-        "prevention": "Early detection, regular weeding",
-        "season": "Rainy season",
-        "emoji": "🌿",
-        "region": "Global"
+        "emoji": "🌱"
     }
 }
 
@@ -641,50 +578,29 @@ def get_weed_info(weed_name):
     return None
 
 # ============================================
-# FERTILIZER DATABASE (Universal)
+# FERTILIZER DATABASE
 # ============================================
 FERTILIZER_DATABASE = {
     "cassava": {
         "best": "NPK 15-15-15 + organic compost",
-        "organic": "Poultry manure, compost, wood ash, crop residues",
-        "application": "Apply 4-6 months after planting. 200kg/ha NPK or 2-3 tons/ha manure",
+        "organic": "Poultry manure, compost, wood ash",
+        "application": "Apply 4-6 months after planting",
         "timing": "Start of rainy season",
-        "local_options": "Compost, poultry manure, cocoa pod husk"
+        "local_options": "Compost, poultry manure"
     },
     "rice": {
         "best": "NPK 20-10-10 + Urea topdressing",
-        "organic": "Compost, green manure, rice straw, cattle manure",
-        "application": "At planting (300kg/ha) and tillering (100kg/ha Urea)",
+        "organic": "Compost, green manure, rice straw",
+        "application": "At planting and tillering",
         "timing": "Start of rainy season",
-        "local_options": "Rice straw compost, cattle manure"
+        "local_options": "Rice straw compost"
     },
     "maize": {
         "best": "NPK 15-15-15 + Urea side-dress",
-        "organic": "Poultry manure, compost, cow dung",
-        "application": "250kg/ha at planting, 100kg/ha Urea at 6-8 weeks",
+        "organic": "Poultry manure, compost",
+        "application": "250kg/ha at planting, 100kg/ha Urea",
         "timing": "Start of rainy season",
-        "local_options": "Poultry manure, farmyard manure"
-    },
-    "yam": {
-        "best": "Organic manure + NPK 10-10-10",
-        "organic": "Cattle manure, compost, wood ash",
-        "application": "Apply at mound making and top dress at 3 months",
-        "timing": "Planting season",
-        "local_options": "Cattle manure, compost"
-    },
-    "tomato": {
-        "best": "NPK 20-20-20 weekly during fruiting",
-        "organic": "Compost, poultry manure, seaweed extract",
-        "application": "Every 7-10 days during growing season",
-        "timing": "Throughout growing season",
-        "local_options": "Compost tea, poultry manure, fish waste"
-    },
-    "pepper": {
-        "best": "NPK 15-15-15 + calcium (CaNO3)",
-        "organic": "Compost, poultry manure, bone meal, wood ash",
-        "application": "At planting (200kg/ha) and top dress monthly",
-        "timing": "Start of dry season",
-        "local_options": "Poultry manure, compost, wood ash"
+        "local_options": "Poultry manure"
     }
 }
 
@@ -695,9 +611,6 @@ def get_fertilizer_info(crop_name):
             return info
     return None
 
-# ============================================
-# WHATSAPP SHARE
-# ============================================
 def whatsapp_share(message):
     encoded = message.replace(" ", "%20").replace("\n", "%0A")
     return f"https://wa.me/?text={encoded}"
@@ -716,7 +629,7 @@ def load_models():
 plant_model = load_models()
 
 # ============================================
-# WEATHER & ADVICE FUNCTIONS
+# WEATHER FUNCTIONS
 # ============================================
 def get_weather(city):
     geo_url = f"https://geocoding-api.open-meteo.com/v1/search?name={city}&count=1&language=en&format=json"
@@ -742,11 +655,11 @@ def generate_advice(plant_name, weather_info):
         return advice
     advice += f"📍 **Weather in {weather_info['city']}:** {weather_info['weather']} | {weather_info['temperature']}°C\n\n"
     if "Rain" in weather_info['weather']:
-        advice += "🌧️ **Tip:** Skip watering today! Nature is doing it for you."
+        advice += "🌧️ **Tip:** Skip watering today!"
     elif weather_info['temperature'] > 30:
-        advice += "☀️ **Hot Weather:** Check soil daily. May need extra water."
+        advice += "☀️ **Hot:** Check soil daily. May need extra water."
     elif weather_info['temperature'] < 5:
-        advice += "❄️ **Cold Weather:** Bring indoors if outside. Reduce watering."
+        advice += "❄️ **Cold:** Bring indoors if outside."
     else:
         advice += "💧 **Watering:** Water when top inch of soil is dry."
     return advice
@@ -754,12 +667,10 @@ def generate_advice(plant_name, weather_info):
 def check_toxicity(plant_name):
     toxic = {
         "oleander": "☠️ TOXIC: Keep away from children and pets.",
-        "azalea": "☠️ TOXIC: Can cause vomiting and weakness.",
-        "dieffenbachia": "☠️ TOXIC: Causes mouth and throat irritation.",
+        "azalea": "☠️ TOXIC: Can cause vomiting.",
+        "dieffenbachia": "☠️ TOXIC: Mouth and throat irritation.",
         "philodendron": "☠️ TOXIC: Keep away from pets.",
-        "pothos": "☠️ TOXIC: Causes mouth pain, vomiting.",
-        "snake plant": "⚠️ CAUTION: Mildly toxic if ingested.",
-        "aloe vera": "⚠️ CAUTION: Safe topically; skin/latex is toxic.",
+        "pothos": "☠️ TOXIC: Mouth pain, vomiting.",
         "lily": "☠️ HIGHLY TOXIC: Dangerous for cats."
     }
     for key, value in toxic.items():
@@ -768,263 +679,132 @@ def check_toxicity(plant_name):
     return "✅ SAFE: Not known to be toxic."
 
 # ============================================
-# AI CHATBOT WITH NATURAL LANGUAGE UNDERSTANDING
+# AI CHATBOT
 # ============================================
 def get_ai_response(question):
-    """Enhanced AI that feels like a companion"""
     q = question.lower().strip()
     
-    # Helper to find crop match
-    def find_crop_match(text):
-        for crop, info in CROP_DATABASE.items():
-            if crop in text:
-                return crop, info
-        return None, None
-    
-    # ====================== DIAGNOSTIC QUESTIONS ======================
-    if any(word in q for word in ["yellow", "yellowing", "turning yellow", "leaves yellow"]):
-        return """
-💛 **Yellowing Leaves – Common Causes**
+    # Crop lookup
+    for crop, info in CROP_DATABASE.items():
+        if crop in q:
+            return f"""
+**🌿 {crop.capitalize()}**
 
-🌱 **Nutrient deficiency** – especially nitrogen. Try adding compost or organic fertilizer.
-💧 **Overwatering** – roots can't breathe. Let soil dry out before watering.
-🐛 **Pests** – check under leaves for insects.
-🌡️ **Weather stress** – too much sun or cold.
+**Local Name:** {info['local_name']}
+**Season:** {info['season']}
+**Harvest:** {info['harvest']}
+**Price:** {info['price']}
 
-🔍 **Quick tip:** Check if the yellowing is on old or new leaves – this helps identify the cause.
-
-Need more help? Describe your plant's condition in more detail!
+**Diseases:** {', '.join(info['diseases'])}
+**Uses:** {info['uses']}
+**Soil:** {info['soil']}
+**Water:** {info['water']}
+**Storage:** {info['storage']}
 """
     
-    if any(word in q for word in ["brown spot", "spots", "black spot", "leaf spot"]):
+    # Symptoms
+    if any(word in q for word in ["yellow", "yellowing", "leaves yellow"]):
+        return """
+💛 **Yellowing Leaves – What to Do**
+
+🌱 **Nutrient deficiency** – add compost or organic fertilizer.
+💧 **Overwatering** – let soil dry out before watering.
+🐛 **Pests** – check under leaves.
+🌡️ **Weather stress** – provide shade if too hot.
+
+**Quick tip:** Check if yellowing is on old or new leaves.
+"""
+    
+    if any(word in q for word in ["brown spot", "spots"]):
         return """
 🟤 **Leaf Spots – Possible Causes**
 
-🍄 **Fungal infection** – common in humid conditions. Apply copper-based fungicide.
+🍄 **Fungal infection** – apply copper-based fungicide.
 💧 **Water splashes** – avoid overhead watering.
-🌱 **Nutrient burn** – too much fertilizer can cause spots.
-🐜 **Pest damage** – inspect for insects.
+🌱 **Nutrient burn** – reduce fertilizer.
 
-**Treatment:** Remove affected leaves, improve air circulation, and apply fungicide if needed.
+**Treatment:** Remove affected leaves, improve air circulation.
 """
     
-    if any(word in q for word in ["wilt", "wilting", "drooping", "leaves drooping"]):
+    if "wilt" in q or "drooping" in q:
         return """
 🥀 **Wilting – What to Do**
 
-💧 **Underwatering** – water deeply and consistently.
-💦 **Overwatering** – roots may be rotting. Check soil moisture.
-🌡️ **Heat stress** – provide shade during hottest part of day.
-🐜 **Pests or diseases** – inspect for signs.
+💧 **Underwatering** – water deeply.
+💦 **Overwatering** – roots may be rotting.
+🌡️ **Heat stress** – provide shade.
 
-**Action:** Check soil moisture (stick finger 2 inches deep). If dry, water; if wet, let it dry out.
+**Action:** Check soil moisture 2 inches deep. If dry, water; if wet, let it dry out.
 """
     
-    if any(word in q for word in ["not fruiting", "no flowers", "no fruit"]):
+    # General
+    if "what is plantpal" in q:
         return """
-🌿 **Plant Not Fruiting – Possible Reasons**
+🌿 **PlantPal – Your Farming Companion**
 
-🌞 **Insufficient sunlight** – most crops need 6+ hours.
-🧪 **Nutrient imbalance** – too much nitrogen promotes leaves, not flowers. Use balanced fertilizer.
-🐝 **Lack of pollinators** – attract bees by planting flowers nearby.
-✂️ **Pruning issues** – over-pruning can delay fruiting.
-⏰ **Timing** – some plants take longer to fruit.
-
-**Try:** Balanced fertilizer (NPK 10-10-10) and ensure good pollination.
-"""
-    
-    # ====================== COMPARISON QUESTIONS ======================
-    if any(word in q for word in ["better", "more profitable", "which crop"]):
-        return """
-📊 **Choosing the Right Crop – Factors to Consider**
-
-💰 **Market demand** – research what sells well in your area.
-🌱 **Climate suitability** – choose crops that thrive in your region.
-💧 **Water availability** – some crops need more water than others.
-📈 **Growing season** – short vs long season crops.
-
-🌾 **Cassava** – hardy, low maintenance, good for food and income.
-🌽 **Maize** – versatile, fast-growing, high market demand.
-🍠 **Yam** – high value, longer growing time.
-🍅 **Tomato** – quick returns, high demand.
-
-**Tip:** Consider mixing short and long season crops for steady income.
-"""
-    
-    # ====================== WEATHER & SEASON ======================
-    if "rain" in q and "water" in q:
-        return """
-🌧️ **Rainy Season – Watering Tips**
-
-✅ **Skip watering** – let nature do the work.
-✅ **Check drainage** – ensure water doesn't pool around roots.
-✅ **Fertilize strategically** – apply before rain to allow nutrients to soak in.
-✅ **Monitor for diseases** – humidity can encourage fungal growth.
-
-**Remember:** Too much water can harm plants just like too little.
-"""
-    
-    # ====================== STORAGE & HARVEST ======================
-    if "harvest" in q or "store" in q or "storage" in q:
-        return """
-📦 **Harvest & Storage Tips**
-
-🌾 **Harvest at the right time** – each crop has a specific sign of maturity.
-🌱 **Handle gently** – bruises cause spoilage.
-🧹 **Clean before storage** – remove dirt and damaged parts.
-🌬️ **Ventilation** – store in a cool, dry place with good airflow.
-☀️ **Sun-drying** – for grains and legumes, dry thoroughly before storage.
-"""
-    
-    # ====================== PEST CONTROL ======================
-    if "pest" in q or "insect" in q or "bug" in q:
-        return """
-🐜 **Natural Pest Control Methods**
-
-🌿 **Neem oil** – effective for many insects.
-🌶️ **Pepper spray** – mix chili with water and soap.
-🧄 **Garlic spray** – natural repellent.
-🌼 **Companion planting** – plant marigolds or other pest-deterring plants.
-🐞 **Beneficial insects** – attract ladybugs and lacewings.
-
-**Rule of thumb:** Start with natural methods before using chemicals.
-"""
-    
-    # ====================== SOIL HEALTH ======================
-    if "soil" in q or "dry" in q:
-        return """
-🌍 **Healthy Soil – The Foundation**
-
-💧 **Water retention** – add compost or organic matter to improve.
-🌿 **Organic matter** – improves structure and nutrients.
-🧪 **pH balance** – test and adjust (most crops prefer 6.0-6.8).
-🌀 **Aeration** – avoid compaction, allow roots to breathe.
-
-**Quick tip:** Healthy soil = healthy plants!
-"""
-    
-    # ====================== CROP-SPECIFIC SEARCH ======================
-    crop_name, crop_info = find_crop_match(q)
-    if crop_name:
-        response = f"""
-**🌿 {crop_name.capitalize()} – Complete Guide**
-
-**Local Names:** {crop_info['local_name']}
-**Season:** {crop_info['season']}
-**Harvest:** {crop_info['harvest']}
-**Market Price:** {crop_info['price']}
-
-**Common Diseases:**
-- {chr(10).join(['- ' + d for d in crop_info['diseases']])}
-
-**Uses:** {crop_info['uses']}
-**Soil:** {crop_info['soil']}
-**Water:** {crop_info['water']}
-**Storage:** {crop_info['storage']}
-
-💡 **Pro tip:** {crop_name} grows best in {crop_info['region']} regions.
-"""
-        # Also add fertilizer advice if available
-        fert_info = get_fertilizer_info(crop_name)
-        if fert_info:
-            response += f"\n**🌱 Fertilizer:** {fert_info['best']}"
-        return response
-    
-    # ====================== WEED SEARCH ======================
-    for weed_key, weed_info in WEED_DATABASE.items():
-        if weed_key in q or weed_info['name'].lower() in q:
-            return f"""
-**🌿 {weed_info['name']}**
-
-**Description:** {weed_info['description']}
-
-**🌱 Organic Control:** {weed_info['control_organic']}
-
-**🧪 Chemical Control:** {weed_info['control_chemical']}
-
-**🛡️ Prevention:** {weed_info['prevention']}
-
-**📅 Season:** {weed_info['season']}
-"""
-    
-    # ====================== GENERAL KNOWLEDGE ======================
-    if "what is plantpal" in q or "what do you do" in q:
-        return """
-🌿 **PlantPal – Your Smart Farming Companion**
-
-I'm here to help you with:
 ✅ Identify plants from photos
 ✅ Detect diseases early
 ✅ Get market prices
-✅ Find the best fertilizers and pesticides
-✅ Learn about crops, weeds, and farming
+✅ Find fertilizers and weed control
+✅ Free and always learning!
 
-**Best of all:** I'm free and always growing my knowledge. Ask me anything!
+**Ask me anything about farming!**
 """
     
-    if "how to use" in q or "how do i" in q:
+    if "how to use" in q:
         return """
 📱 **How to Use PlantPal**
 
-**1.** 📸 Take a clear photo of the plant.
-**2.** ☁️ Upload it and enter your city.
-**3.** 🌿 Get results – name, care, prices, and more.
-**4.** 📤 Share with fellow farmers via WhatsApp.
-**5.** 📝 Create a free account to save your history and unlock unlimited identifications.
-
-**Pro tip:** Use the "Ask AI" tab for any farming question – I'm here 24/7!
+1. 📸 Take a clear photo
+2. ☁️ Upload and enter your city
+3. 🌿 Get results – name, care, prices
+4. 📤 Share via WhatsApp
+5. 📝 Create account to save history
 """
     
-    if "thank" in q:
-        return "🙏 You're welcome! Happy farming! 🌱💪"
-    
-    # ====================== FALLBACK ======================
     return """
-🤔 **Great question! I'm still learning, but here's what I know:**
+🤔 **Great question! I can help with:**
 
-I can help you with:
 - 🌿 Plant identification and care
 - 🩺 Disease diagnosis
 - 🌱 Fertilizer and soil advice
 - 🌾 Weed control
 - 💰 Market prices
-- 📅 Seasonal advice
 
-**Try asking me:**
+**Try asking:**
 - "My cassava leaves are yellowing"
-- "How to control weeds in maize?"
+- "How to control weeds?"
 - "Best fertilizer for rice?"
-- "When to harvest yam?"
 
 I'm here to help you grow! 🌻
 """
 
 # ============================================
-# CUSTOM CSS – MODERN, GLASS-MORPHISM, MOBILE-FIRST
+# CUSTOM CSS – MODERN, DYNAMIC, WITH STRONG PRESENCE
 # ============================================
 def get_css():
     if st.session_state.theme == "dark":
         bg_color = "#0a0a1a"
         text_color = "#e0e0e0"
-        card_bg = "rgba(30,30,50,0.7)"
-        border_color = "rgba(255,255,255,0.1)"
+        card_bg = "rgba(30,30,50,0.75)"
+        border_color = "rgba(255,255,255,0.08)"
         shadow = "0 8px 32px rgba(0,0,0,0.6)"
         hero_bg = "linear-gradient(135deg, #0a1a0a, #1a3a2a, #0a1a0a)"
         glass_bg = "rgba(255,255,255,0.05)"
-        accent_color = "#2d8a4e"
+        accent_color = "#3a9d5e"
     else:
         bg_color = "#f0f4f0"
         text_color = "#1a1a2e"
         card_bg = "rgba(255,255,255,0.7)"
         border_color = "rgba(255,255,255,0.3)"
         shadow = "0 8px 32px rgba(0,0,0,0.1)"
-        hero_bg = "linear-gradient(135deg, #1a472a, #2d8a4e, #1a472a)"
+        hero_bg = "linear-gradient(135deg, #0d2e1a, #1a472a, #2d8a4e, #1a472a)"
         glass_bg = "rgba(255,255,255,0.15)"
         accent_color = "#2d8a4e"
 
     return f"""
     <style>
-        /* Reset */
+        /* GLOBAL RESET */
         .stApp {{
             background: {bg_color};
             color: {text_color};
@@ -1032,10 +812,9 @@ def get_css():
             padding: 0 !important;
         }}
         
-        /* Hide defaults */
         #MainMenu, footer, header {{visibility: hidden;}}
         
-        /* Floating leaves background */
+        /* FLOATING LEAVES BACKGROUND */
         .plant-bg {{
             position: fixed;
             top: 0;
@@ -1048,7 +827,7 @@ def get_css():
             display: grid;
             grid-template-columns: repeat(5, 1fr);
             grid-template-rows: repeat(6, 1fr);
-            font-size: 2rem;
+            font-size: 2.5rem;
             overflow: hidden;
             user-select: none;
         }}
@@ -1056,53 +835,60 @@ def get_css():
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2rem;
-            animation: float 12s infinite ease-in-out;
+            animation: float 10s infinite ease-in-out;
         }}
         @keyframes float {{
             0%, 100% {{ transform: translateY(0) rotate(0deg); }}
-            50% {{ transform: translateY(-20px) rotate(5deg); }}
+            50% {{ transform: translateY(-15px) rotate(5deg); }}
         }}
         
-        /* Glassmorphism card */
+        /* GLASS-MORPHISM CARD */
         .glass {{
             background: {card_bg};
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border: 1px solid {border_color};
-            border-radius: 20px;
+            border-radius: 24px;
             padding: 1.5rem;
             box-shadow: {shadow};
-            transition: all 0.3s ease;
+            transition: all 0.4s ease;
         }}
         .glass:hover {{
             border-color: {accent_color};
-            box-shadow: 0 12px 48px rgba(45,138,78,0.15);
+            box-shadow: 0 12px 48px rgba(45,138,78,0.2);
         }}
         
-        /* Hero */
+        /* HERO SECTION – DYNAMIC WITH PRESENCE */
         .hero {{
             background: {hero_bg};
-            background-size: 300% 300%;
-            animation: gradientShift 10s ease infinite;
-            padding: 2.5rem 1.5rem;
-            border-radius: 24px;
+            background-size: 400% 400%;
+            animation: gradientShift 8s ease infinite;
+            padding: 3rem 2rem;
+            border-radius: 28px;
             color: white;
             text-align: center;
             margin-bottom: 1.5rem;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            box-shadow: 0 20px 60px rgba(0,0,0,0.35);
             position: relative;
             overflow: hidden;
         }}
         .hero::before {{
-            content: '';
+            content: '🌿🌾🌱🌻🌽🍅🍠🥜';
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.08) 0%, transparent 70%);
-            animation: rotate 20s linear infinite;
+            top: -30px;
+            right: -20px;
+            font-size: 6rem;
+            opacity: 0.08;
+            animation: rotate 25s linear infinite;
+        }}
+        .hero::after {{
+            content: '🌿🌱🌾🌻🌽🍅🍠';
+            position: absolute;
+            bottom: -30px;
+            left: -20px;
+            font-size: 5rem;
+            opacity: 0.06;
+            animation: rotate 30s linear infinite reverse;
         }}
         @keyframes rotate {{
             from {{ transform: rotate(0deg); }}
@@ -1113,80 +899,87 @@ def get_css():
             50% {{ background-position: 100% 50%; }}
             100% {{ background-position: 0% 50%; }}
         }}
-        
         .hero h1 {{
-            font-size: 2.8rem;
-            font-weight: 800;
+            font-size: 3.2rem;
+            font-weight: 900;
             margin-bottom: 0.3rem;
             position: relative;
             z-index: 1;
-            text-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            text-shadow: 0 4px 30px rgba(0,0,0,0.4);
+            letter-spacing: -0.5px;
+        }}
+        .hero h1 .highlight {{
+            background: linear-gradient(135deg, #f5d742, #f7b731);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
         }}
         .hero p {{
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             opacity: 0.95;
             position: relative;
             z-index: 1;
-            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            text-shadow: 0 2px 15px rgba(0,0,0,0.3);
+            font-weight: 500;
         }}
         .hero .subtitle {{
-            font-size: 0.95rem;
+            font-size: 1rem;
             opacity: 0.8;
             position: relative;
             z-index: 1;
             margin-top: 0.5rem;
+            font-weight: 400;
         }}
         
-        /* Feature cards – clickable */
+        /* FEATURE CARDS – CLICKABLE, DYNAMIC */
         .feature-card {{
             background: {card_bg};
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
             border: 1px solid {border_color};
-            border-radius: 20px;
-            padding: 1.8rem 1rem;
+            border-radius: 24px;
+            padding: 2rem 1.2rem;
             text-align: center;
-            transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+            transition: all 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
             box-shadow: {shadow};
             height: 100%;
             cursor: pointer;
             position: relative;
             overflow: hidden;
         }}
-        .feature-card:hover {{
-            transform: translateY(-10px) scale(1.02);
-            border-color: {accent_color};
-            box-shadow: 0 20px 60px rgba(45,138,78,0.2);
-        }}
-        .feature-card::after {{
+        .feature-card::before {{
             content: '';
             position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(45,138,78,0.05) 0%, transparent 70%);
+            top: -100%;
+            left: -100%;
+            width: 300%;
+            height: 300%;
+            background: radial-gradient(circle, rgba(45,138,78,0.08) 0%, transparent 70%);
+            transition: opacity 0.5s;
             opacity: 0;
-            transition: opacity 0.4s;
         }}
-        .feature-card:hover::after {{
+        .feature-card:hover::before {{
             opacity: 1;
         }}
+        .feature-card:hover {{
+            transform: translateY(-12px) scale(1.02);
+            border-color: {accent_color};
+            box-shadow: 0 20px 60px rgba(45,138,78,0.25);
+        }}
         .feature-card .icon {{
-            font-size: 3.2rem;
+            font-size: 3.5rem;
             margin-bottom: 0.5rem;
             display: block;
-            animation: pulse 2s infinite;
+            animation: pulse 2.5s infinite;
         }}
         @keyframes pulse {{
             0%, 100% {{ transform: scale(1); }}
-            50% {{ transform: scale(1.05); }}
+            50% {{ transform: scale(1.08); }}
         }}
         .feature-card h3 {{
             color: {accent_color};
             margin-bottom: 0.3rem;
-            font-size: 1.1rem;
-            font-weight: 700;
+            font-size: 1.2rem;
+            font-weight: 800;
         }}
         .feature-card p {{
             color: {text_color};
@@ -1194,27 +987,121 @@ def get_css():
             opacity: 0.8;
         }}
         
-        /* Stats */
+        /* STATS */
         .stat-box {{
             background: {card_bg};
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
             border: 1px solid {border_color};
             border-radius: 16px;
-            padding: 0.8rem;
+            padding: 1rem;
             text-align: center;
-            transition: all 0.2s;
+            transition: all 0.3s;
         }}
         .stat-box:hover {{
             border-color: {accent_color};
+            transform: scale(1.03);
         }}
         .stat-number {{
-            font-size: 2rem;
-            font-weight: 700;
+            font-size: 2.2rem;
+            font-weight: 800;
             color: {accent_color};
         }}
         
-        /* Bottom navigation (mobile) */
+        /* AUTH CONTAINER */
+        .auth-container {{
+            max-width: 480px;
+            margin: 0 auto;
+            background: {card_bg};
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+            border: 1px solid {border_color};
+            border-radius: 28px;
+            padding: 2rem;
+            box-shadow: {shadow};
+        }}
+        
+        /* PROFILE PIC */
+        .profile-pic {{
+            font-size: 4.5rem;
+            text-align: center;
+        }}
+        
+        /* BUTTONS */
+        .stButton > button {{
+            background: linear-gradient(135deg, #1a472a, #2d8a4e, #1a472a) !important;
+            background-size: 200% 200% !important;
+            animation: buttonShift 4s ease infinite !important;
+            color: white !important;
+            font-weight: 800 !important;
+            border: none !important;
+            border-radius: 50px !important;
+            padding: 0.8rem 2.5rem !important;
+            font-size: 1.05rem !important;
+            transition: all 0.3s ease !important;
+            width: 100% !important;
+            box-shadow: 0 4px 25px rgba(45,138,78,0.35) !important;
+            letter-spacing: 0.5px !important;
+        }}
+        @keyframes buttonShift {{
+            0% {{ background-position: 0% 50%; }}
+            50% {{ background-position: 100% 50%; }}
+            100% {{ background-position: 0% 50%; }}
+        }}
+        .stButton > button:hover {{
+            transform: scale(1.04) !important;
+            box-shadow: 0 8px 45px rgba(45,138,78,0.5) !important;
+        }}
+        
+        /* WHATSAPP BUTTON */
+        .whatsapp-btn {{
+            background: #25D366 !important;
+            color: white !important;
+            border: none !important;
+            padding: 12px 24px !important;
+            border-radius: 14px !important;
+            font-size: 16px !important;
+            font-weight: 700 !important;
+            cursor: pointer !important;
+            text-decoration: none !important;
+            display: inline-block !important;
+            margin: 8px 0 !important;
+            transition: all 0.3s !important;
+            width: 100% !important;
+            text-align: center !important;
+        }}
+        .whatsapp-btn:hover {{
+            transform: scale(1.04) !important;
+            box-shadow: 0 4px 25px rgba(37,211,102,0.4) !important;
+        }}
+        
+        /* FEEDBACK BOX */
+        .feedback-box {{
+            background: {card_bg};
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border: 1px solid {border_color};
+            border-radius: 16px;
+            padding: 1rem;
+            margin: 0.5rem 0;
+        }}
+        
+        /* FOOTER */
+        .footer {{
+            text-align: center;
+            padding: 1.5rem;
+            color: #888;
+            border-top: 1px solid {border_color};
+            margin-top: 2rem;
+            background: {card_bg};
+            backdrop-filter: blur(10px);
+            -webkit-backdrop-filter: blur(10px);
+            border-radius: 16px;
+            font-size: 0.85rem;
+            letter-spacing: 0.3px;
+        }}
+        
+        /* BOTTOM NAV – MOBILE */
         .bottom-nav {{
             display: none;
             position: fixed;
@@ -1222,8 +1109,8 @@ def get_css():
             left: 0;
             width: 100%;
             background: {card_bg};
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
             border-top: 1px solid {border_color};
             padding: 0.5rem 0;
             z-index: 999;
@@ -1243,31 +1130,30 @@ def get_css():
         .bottom-nav .nav-item.active {{
             opacity: 1;
             color: {accent_color};
-            font-weight: 600;
+            font-weight: 700;
         }}
         .bottom-nav .nav-item .icon {{
-            font-size: 1.5rem;
+            font-size: 1.6rem;
             display: block;
         }}
         
         @media (max-width: 768px) {{
             .bottom-nav {{ display: flex; }}
-            .main-content {{ padding-bottom: 70px; }}
-            .hero h1 {{ font-size: 1.8rem; }}
+            .main-content {{ padding-bottom: 80px; }}
+            .hero h1 {{ font-size: 2rem; }}
             .hero p {{ font-size: 1rem; }}
             .hero {{ padding: 1.5rem 1rem; }}
-            .feature-card {{ padding: 1rem; }}
+            .feature-card {{ padding: 1.2rem 0.8rem; }}
             .feature-card .icon {{ font-size: 2.5rem; }}
             .plant-bg {{ font-size: 1.2rem; grid-template-columns: repeat(3, 1fr); }}
-            .plant-bg span {{ font-size: 1.2rem; }}
+            .stat-number {{ font-size: 1.5rem; }}
         }}
         @media (max-width: 480px) {{
             .hero h1 {{ font-size: 1.5rem; }}
             .hero p {{ font-size: 0.85rem; }}
-            .stat-number {{ font-size: 1.5rem; }}
+            .feature-card h3 {{ font-size: 1rem; }}
         }}
         
-        /* Animations */
         @keyframes fadeInUp {{
             from {{ opacity: 0; transform: translateY(30px); }}
             to {{ opacity: 1; transform: translateY(0); }}
@@ -1279,75 +1165,6 @@ def get_css():
             to {{ opacity: 1; transform: translateY(0); }}
         }}
         .slide-down {{ animation: slideDown 0.4s ease-out; }}
-        
-        /* Buttons */
-        .stButton > button {{
-            background: linear-gradient(135deg, #1a472a, #2d8a4e) !important;
-            color: white !important;
-            font-weight: 700 !important;
-            border: none !important;
-            border-radius: 50px !important;
-            padding: 0.7rem 2rem !important;
-            font-size: 1rem !important;
-            transition: all 0.3s ease !important;
-            width: 100% !important;
-            box-shadow: 0 4px 20px rgba(45,138,78,0.3) !important;
-        }}
-        .stButton > button:hover {{
-            transform: scale(1.03) !important;
-            box-shadow: 0 8px 40px rgba(45,138,78,0.5) !important;
-        }}
-        
-        /* WhatsApp button */
-        .whatsapp-btn {{
-            background: #25D366;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 10px;
-            font-size: 14px;
-            cursor: pointer;
-            text-decoration: none;
-            display: inline-block;
-            margin: 8px 0;
-            transition: all 0.3s;
-            width: 100%;
-            text-align: center;
-            font-weight: 600;
-        }}
-        .whatsapp-btn:hover {{
-            transform: scale(1.03);
-            box-shadow: 0 4px 20px rgba(37,211,102,0.4);
-        }}
-        
-        /* Feedback box */
-        .feedback-box {{
-            background: {card_bg};
-            backdrop-filter: blur(8px);
-            -webkit-backdrop-filter: blur(8px);
-            border: 1px solid {border_color};
-            border-radius: 12px;
-            padding: 1rem;
-            margin: 0.5rem 0;
-        }}
-        
-        /* Toast notification */
-        .toast {{
-            position: fixed;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: {card_bg};
-            backdrop-filter: blur(16px);
-            -webkit-backdrop-filter: blur(16px);
-            border: 1px solid {border_color};
-            border-radius: 12px;
-            padding: 12px 24px;
-            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
-            z-index: 9999;
-            animation: slideDown 0.4s ease-out;
-            font-weight: 500;
-        }}
     </style>
     """
 
@@ -1356,7 +1173,7 @@ def get_css():
 # ============================================
 def navigation():
     with st.sidebar:
-        st.markdown(f"### {get_text('app_name')}")
+        st.markdown(f"### 🌿 PlantPal")
         st.markdown("---")
         
         if st.session_state.logged_in:
@@ -1421,7 +1238,7 @@ def navigation():
                 st.rerun()
 
 # ============================================
-# BOTTOM NAVIGATION (Mobile)
+# BOTTOM NAVIGATION (MOBILE)
 # ============================================
 def bottom_nav():
     st.markdown("""
@@ -1450,14 +1267,13 @@ def back_button():
         st.rerun()
 
 # ============================================
-# HOME PAGE – DYNAMIC, CLICKABLE FEATURES
+# HOME PAGE
 # ============================================
 def home_page():
-    # Floating background
-    crops = list(CROP_DATABASE.keys())
+    crop_emoji = ["🌿", "🌾", "🌱", "🌻", "🌽", "🍅", "🍠", "🥜"]
     bg_html = '<div class="plant-bg">'
     for i in range(48):
-        bg_html += f'<span>🌿</span>'
+        bg_html += f'<span>{crop_emoji[i % len(crop_emoji)]}</span>'
     bg_html += '</div>'
     st.markdown(bg_html, unsafe_allow_html=True)
 
@@ -1466,7 +1282,7 @@ def home_page():
 
         st.markdown(f"""
         <div class="hero">
-            <h1>🌿 PlantPal</h1>
+            <h1>🌿 <span class="highlight">PlantPal</span></h1>
             <p>🌍 Your Smart Farming Companion</p>
             <div class="subtitle">
                 🌾 Identify plants · 🩺 Detect diseases · 💰 Market prices · 🌿 Weed control · 🧪 Fertilizer advice
@@ -1476,7 +1292,6 @@ def home_page():
         </div>
         """, unsafe_allow_html=True)
 
-        # Call to action
         col1, col2, col3 = st.columns([1,2,1])
         with col2:
             if st.session_state.logged_in:
@@ -1490,20 +1305,17 @@ def home_page():
 
         st.markdown("---")
 
-        # Stats
         st.markdown("""
-        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 0.6rem; margin: 1rem 0;">
-            <div class="stat-box"><div class="stat-number">50K+</div><div style="font-size:0.75rem;color:#666;">Plants Identified</div></div>
-            <div class="stat-box"><div class="stat-number">38</div><div style="font-size:0.75rem;color:#666;">Diseases Detected</div></div>
-            <div class="stat-box"><div class="stat-number">15+</div><div style="font-size:0.75rem;color:#666;">Crops</div></div>
-            <div class="stat-box"><div class="stat-number">92%</div><div style="font-size:0.75rem;color:#666;">Accuracy</div></div>
-            <div class="stat-box"><div class="stat-number">5</div><div style="font-size:0.75rem;color:#666;">Languages</div></div>
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 0.8rem; margin: 1rem 0;">
+            <div class="stat-box"><div class="stat-number">50K+</div><div style="font-size:0.75rem;">Identified</div></div>
+            <div class="stat-box"><div class="stat-number">38</div><div style="font-size:0.75rem;">Diseases</div></div>
+            <div class="stat-box"><div class="stat-number">15+</div><div style="font-size:0.75rem;">Crops</div></div>
+            <div class="stat-box"><div class="stat-number">92%</div><div style="font-size:0.75rem;">Accuracy</div></div>
+            <div class="stat-box"><div class="stat-number">5</div><div style="font-size:0.75rem;">Languages</div></div>
         </div>
         """, unsafe_allow_html=True)
 
         st.markdown("---")
-
-        # Clickable Feature Cards
         st.markdown("## 🌟 Explore PlantPal")
         st.markdown("Click on any card to try it out – no login required for the first 3 identifications!")
 
@@ -1515,12 +1327,11 @@ def home_page():
             ("🩺", "Disease Detection", "Upload a sick leaf and get treatment recommendations.", "disease"),
             ("💰", "Market Prices", "Check current market prices for crops in ₦ per ton.", "learn"),
             ("📱", "Share via WhatsApp", "Share plant info with other farmers instantly.", "#"),
-            ("🌍", "5 Languages", "Use PlantPal in English, Yorùbá, Hausa, Igbo, Pidgin, Swahili.", "about")
+            ("🌍", "5+ Languages", "Use PlantPal in English, Yorùbá, Hausa, Igbo, Pidgin, Swahili.", "about")
         ]
         
         for i, (icon, title, desc, page) in enumerate(features):
             with col1 if i % 3 == 0 else col2 if i % 3 == 1 else col3:
-                # Wrap in a container that triggers navigation on click
                 if st.button(f"{icon} **{title}**\n\n{desc}", key=f"feature_{i}"):
                     if page != "#":
                         st.session_state.page = page
@@ -1529,14 +1340,12 @@ def home_page():
                         st.info("📱 WhatsApp sharing is available after plant identification.")
 
         st.markdown("---")
-
-        # Quick Guide
         st.markdown("## 📋 How It Works")
         col1, col2, col3 = st.columns(3)
         with col1:
             st.markdown("""
             <div style="text-align:center;padding:0.5rem;">
-                <div style="font-size:2.5rem;">📸</div>
+                <div style="font-size:2.8rem;">📸</div>
                 <h4>1. Take a Photo</h4>
                 <p style="color:#666;font-size:0.9rem;">Of any plant or leaf</p>
             </div>
@@ -1544,7 +1353,7 @@ def home_page():
         with col2:
             st.markdown("""
             <div style="text-align:center;padding:0.5rem;">
-                <div style="font-size:2.5rem;">☁️</div>
+                <div style="font-size:2.8rem;">☁️</div>
                 <h4>2. Upload & Analyze</h4>
                 <p style="color:#666;font-size:0.9rem;">AI identifies instantly</p>
             </div>
@@ -1552,7 +1361,7 @@ def home_page():
         with col3:
             st.markdown("""
             <div style="text-align:center;padding:0.5rem;">
-                <div style="font-size:2.5rem;">🌿</div>
+                <div style="font-size:2.8rem;">🌿</div>
                 <h4>3. Get Results</h4>
                 <p style="color:#666;font-size:0.9rem;">Name, care, prices, and more</p>
             </div>
@@ -1561,12 +1370,12 @@ def home_page():
         st.markdown('</div>', unsafe_allow_html=True)
 
 # ============================================
-# AUTH PAGE – WITH OTP DISPLAY
+# AUTH PAGE – FIXED SIGN-UP
 # ============================================
 def auth_page():
     back_button()
     st.markdown('<div class="main-content slide-down">', unsafe_allow_html=True)
-    st.markdown('<div class="glass">', unsafe_allow_html=True)
+    st.markdown('<div class="auth-container">', unsafe_allow_html=True)
     
     tab1, tab2 = st.tabs(["🔐 Login", "📝 Sign Up"])
 
@@ -1601,50 +1410,56 @@ def auth_page():
         st.markdown("<h2 style='text-align:center;'>Create Account</h2>", unsafe_allow_html=True)
         st.markdown("<p style='text-align:center;color:#666;'>Join the farming community</p>", unsafe_allow_html=True)
         
-        full_name = st.text_input("Full Name", placeholder="e.g., Adebayo Ogunlesi", key="signup_full_name")
-        username = st.text_input("Username", placeholder="Choose a unique username", key="signup_user")
-        email = st.text_input("Email Address", placeholder="your@email.com", key="signup_email")
-        password = st.text_input("Password", type="password", placeholder="Min 6 characters", key="signup_pass")
-        confirm_password = st.text_input("Confirm Password", type="password", placeholder="Re-enter password", key="signup_confirm")
-        
-        st.markdown("---")
-        st.markdown("### 📧 Email Verification")
-        st.markdown("We'll send a code to your email (for now, it's shown here)")
-
-        if st.button("📝 Sign Up", use_container_width=True, type="primary"):
-            if not full_name or not username or not email or not password:
-                st.error("All fields required")
-            elif len(password) < 6:
-                st.error("Password must be at least 6 characters")
-            elif password != confirm_password:
-                st.error("Passwords do not match")
-            elif "@" not in email or "." not in email:
-                st.error("Invalid email address")
-            elif " " in username:
-                st.error("Username cannot contain spaces")
-            else:
-                success, msg = register_user(username, full_name, email, password)
-                if success:
-                    st.success(msg)
-                    st.session_state.show_otp = True
-                    
-                    otp_code = st.text_input("Enter 6-digit OTP", placeholder="e.g., 123456", key="otp_input")
-                    if st.button("✅ Verify Email", use_container_width=True):
-                        if otp_code:
-                            verified, verify_msg = verify_otp(email, otp_code)
-                            if verified:
-                                st.success(verify_msg)
-                                st.balloons()
-                                st.info("👤 Please complete your profile!")
-                                time.sleep(1)
-                                st.session_state.page = "profile"
-                                st.rerun()
-                            else:
-                                st.error(verify_msg)
-                        else:
-                            st.error("Please enter the OTP code")
+        # CRITICAL FIX: All fields inside the form must be captured properly
+        with st.form(key="signup_form"):
+            full_name = st.text_input("Full Name", placeholder="e.g., Adebayo Ogunlesi", key="signup_full_name")
+            username = st.text_input("Username", placeholder="Choose a unique username", key="signup_user")
+            email = st.text_input("Email Address", placeholder="your@email.com", key="signup_email")
+            password = st.text_input("Password", type="password", placeholder="Min 6 characters", key="signup_pass")
+            confirm_password = st.text_input("Confirm Password", type="password", placeholder="Re-enter password", key="signup_confirm")
+            
+            st.markdown("---")
+            st.markdown("### 📧 Email Verification")
+            st.markdown("A code will be shown for you to verify.")
+            
+            submitted = st.form_submit_button("📝 Sign Up", use_container_width=True, type="primary")
+            
+            if submitted:
+                # Validation
+                if not full_name or not username or not email or not password:
+                    st.error("❌ All fields are required. Please fill in everything.")
+                elif len(password) < 6:
+                    st.error("❌ Password must be at least 6 characters")
+                elif password != confirm_password:
+                    st.error("❌ Passwords do not match")
+                elif "@" not in email or "." not in email:
+                    st.error("❌ Invalid email address")
+                elif " " in username:
+                    st.error("❌ Username cannot contain spaces")
                 else:
-                    st.error(msg)
+                    success, msg = register_user(username, full_name, email, password)
+                    if success:
+                        st.success(msg)
+                        st.session_state.show_otp = True
+                        
+                        # Show OTP verification
+                        otp_code = st.text_input("Enter 6-digit OTP", placeholder="e.g., 123456", key="otp_input")
+                        if st.button("✅ Verify Email", use_container_width=True):
+                            if otp_code:
+                                verified, verify_msg = verify_otp(email, otp_code)
+                                if verified:
+                                    st.success(verify_msg)
+                                    st.balloons()
+                                    st.info("👤 Please complete your profile!")
+                                    time.sleep(1)
+                                    st.session_state.page = "profile"
+                                    st.rerun()
+                                else:
+                                    st.error(verify_msg)
+                            else:
+                                st.error("Please enter the OTP code")
+                    else:
+                        st.error(msg)
     
     st.markdown('</div></div>', unsafe_allow_html=True)
 
@@ -1669,7 +1484,7 @@ def profile_page():
     with col1:
         profile_pic = user_data.get("profile_pic", "👨‍🌾")
         st.markdown(f"""
-        <div style="font-size:4rem;text-align:center;">{profile_pic}</div>
+        <div class="profile-pic">{profile_pic}</div>
         <div style="text-align:center;">
             <h3>{user_data.get('full_name', st.session_state.username)}</h3>
             <p style="color:#666;">@{st.session_state.username}</p>
@@ -1729,7 +1544,7 @@ def profile_page():
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ============================================
-# IDENTIFY PAGE – WITH 3-PLANT FREE LIMIT
+# IDENTIFY PAGE
 # ============================================
 def identify_page():
     back_button()
@@ -1737,7 +1552,6 @@ def identify_page():
     st.markdown("## 🌱 Identify a Plant")
     st.markdown("Upload a photo and get plant name, care tips, and market prices")
 
-    # Check free limit for non-logged-in users
     if not st.session_state.logged_in and st.session_state.free_identifications >= 3:
         st.warning("🌱 You've used your 3 free identifications. Create a free account to continue!")
         st.info(get_text("register_prompt"))
@@ -1794,7 +1608,6 @@ def identify_page():
                         st.markdown("### ☠️ Safety")
                         st.markdown(toxicity)
                         
-                        # Increment free count and save history
                         if st.session_state.logged_in:
                             update_user_history(st.session_state.username, plant_name)
                             st.success("✅ Saved to your history!")
@@ -2009,10 +1822,9 @@ def faq_page():
         ("What crops?", "Cassava, Rice, Yam, Tomato, Pepper, Maize, Cocoa, and more."),
         ("Can I share results?", "Yes, via WhatsApp."),
         ("Do I need to login?", "No, explore first. Login for unlimited use and history."),
-        ("What about weeds?", "Check the Weeds section for identification and control."),
-        ("What about fertilizers?", "Check the Fertilizers section for recommendations."),
+        ("What about weeds?", "Check the Weeds section."),
+        ("What about fertilizers?", "Check the Fertilizers section."),
         ("How to use AI assistant?", "Go to Learn Center → Ask AI tab."),
-        ("Can I use it offline?", "Not yet, but we're working on it."),
         ("Who is this for?", "All smallholder farmers, anywhere in the world.")
     ]
     for q,a in faqs:
@@ -2086,11 +1898,8 @@ def about_page():
 def main():
     st.markdown(get_css(), unsafe_allow_html=True)
     navigation()
-    
-    # Bottom nav (mobile)
     bottom_nav()
     
-    # Profile completion reminder
     if st.session_state.logged_in and st.session_state.page != "profile":
         user_data = get_user_data(st.session_state.username)
         if user_data and (not user_data.get('nationality') or not user_data.get('bio')):
@@ -2100,7 +1909,6 @@ def main():
                     st.session_state.page = "profile"
                     st.rerun()
     
-    # Page routing
     if st.session_state.page == "home":
         home_page()
     elif st.session_state.page == "auth":
@@ -2134,7 +1942,7 @@ def main():
         home_page()
     
     st.markdown("""
-    <div class="footer" style="text-align:center;padding:1.5rem;color:#888;border-top:1px solid #eee;margin-top:2rem;background:rgba(255,255,255,0.5);backdrop-filter:blur(8px);border-radius:12px;font-size:0.8rem;">
+    <div class="footer">
         <p>🌍 PlantPal – Your Smart Farming Companion</p>
         <p style="font-size:0.7rem;">© 2024 PlantPal. Built with ❤️ for farmers everywhere</p>
     </div>
